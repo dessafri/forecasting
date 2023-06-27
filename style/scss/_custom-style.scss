@@ -1,0 +1,60 @@
+$font-family: "Poppins", sans-serif;
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+.header {
+  border-bottom: 1px solid rgba($color: $black, $alpha: 0.2);
+}
+.brand {
+  font-weight: 600;
+  font-size: 22px;
+  font-family: $font-family;
+}
+.font-navbar {
+  font-weight: 400;
+  font-size: 16px;
+  font-family: $font-family;
+  margin-right: 10px;
+}
+.content {
+  margin-top: 50px;
+  img {
+    width: 500px;
+    height: 400px;
+  }
+  .text-title {
+    font-size: 24px;
+    font-family: $font-family;
+  }
+}
+.h1-brand {
+  font-size: 16px;
+  font-weight: 500;
+  font-family: $font-family;
+}
+.tabel {
+  margin-top: 50px;
+  margin-bottom: 50px;
+}
+.dt-buttons {
+  margin: 20px 0 20px 0;
+}
+section.login {
+  width: 100%;
+  .card {
+    width: 50%;
+    margin-left: 30px;
+    border-radius: 30px;
+    border: 1px solid rgba($color: #000000, $alpha: 0.4);
+    padding: 50px;
+    box-sizing: border-box;
+    margin: 0;
+    margin-top: 60px;
+    h2 {
+      font-size: 18px;
+      font-family: $font-family;
+    }
+  }
+}
