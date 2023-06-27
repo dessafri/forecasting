@@ -107,7 +107,7 @@ if(isset($_POST["submitperiode"])){
                         <tr>
                             <td><?= $index++?></td>
                             <td><?= $data["tahun"]?></td>
-                            <td><?= $data["bulan"] ?></td>
+                            <td><?= $data["nama_bulan"] ?></td>
                             <td><?= $data["produksi"] ?></td>
                             <td><?= $data["ma2"]?></td>
                             <td><?= $data["dma2"] ?></td>
@@ -283,7 +283,7 @@ if(isset($_POST["submitperiode"])){
             response.forEach(item => {
                 prod.push(item.produksi);
                 ft.push(item.ft);
-                bulan.push(item.bulan);
+                bulan.push(item.nama_bulan);
             });
             new Chart(ctx, {
                 type: 'line',
