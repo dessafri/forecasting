@@ -100,7 +100,7 @@ if(isset($_POST["submitperiode"])){
                     </thead>
                     <tbody>
                         <?php
-                        $dataDMA = query("SELECT a.id_dma, b.id_mddata, b.tahun,b.bulan,b.periode, b.produksi, a.ma2, a.dma2, a.a, a.b, a.ft, a.error, a.mape FROM td_dma a JOIN m_data b ON a.id_data = b.id_mddata");
+                        $dataDMA = query("SELECT a.id_dma, b.id_mddata, b.tahun,c.nama_bulan,b.periode, b.produksi, a.ma2, a.dma2, a.a, a.b, a.ft, a.error, a.mape FROM td_dma a JOIN m_data b ON a.id_data = b.id_mddata JOIN m_bulan c ON b.bulan = c.id_bulan");
                         $index = 1;
                         foreach($dataDMA as $data):
                         ?>

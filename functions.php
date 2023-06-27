@@ -261,14 +261,14 @@ function buatHasil($inputPeriode){
         $sqlFT = "UPDATE td_dma SET ft = '$val' WHERE id_data = '$id'";
          mysqli_query($conn, $sqlFT);
     }
-    $dataErr = query('SELECT b.id_data, a.produksi, b.ft FROM m_data a JOIN td_dma b ON a.id_mddata = b.id_data');
+    $dataErr = query('SELECT b.id_data, a.produksi, b.a FROM m_data a JOIN td_dma b ON a.id_mddata = b.id_data');
     $ERR = array();
     foreach($dataErr as $index=> $data){
         if($index < $indexFT){
             array_push($ERR, array('id'=>$data['id_data'], 'value'=>0));
         }
         else{
-            $result = $dataErr[$index]['produksi'] - $dataErr[$index]['ft'];
+            $result = $dataErr[$index]['produksi'] - $dataErr[$index]['a'];
             $mape = $result/$dataErr[$index]['produksi']*100;
             $abs = abs($mape);
             array_push($ERR, array('id'=>$data['id_data'], 'value'=>$result, 'mape'=>round($abs,3)));
