@@ -346,7 +346,6 @@ function buatHasil($inputPeriode){
     $pangkat = pow($dataNilai[0]['X'],2);
     $nilaiA = round((($dataNilai[0]['produksi']*$dataNilai[0]['X2'])-($dataNilai[0]['X']*$dataNilai[0]['XY']))/(($dataNilai[0]['banyak_data']*$dataNilai[0]['X2'])-($pangkat)));
     $nilaiB = round((($dataNilai[0]['banyak_data']*$dataNilai[0]['XY'])-($dataNilai[0]['X']*$dataNilai[0]['produksi']))/(($dataNilai[0]['banyak_data']*$dataNilai[0]['X2'])-($pangkat)));
-    
     $arraySt = array();
     foreach($dataforecast as $index=>$data){
         $st = $nilaiA+$nilaiB * $index;
@@ -440,7 +439,29 @@ function buatHasil($inputPeriode){
         $sqlErr = "UPDATE td_dekompose SET mape = '$mape' WHERE id_data = '$id'";
         mysqli_query($conn, $sqlErr);
     }
-    header("Location: hasil.php");
+    $sqlMAPrediksi = query("SELECT SUM(tbl.produksi) / $inputPeriode as MA FROM (SELECT produksi FROM m_data ORDER BY m_data.id_mddata DESC LIMIT $inputPeriode) as tbl");
+    $sqlCMa = query("SELECT td_dekompose.ma as MA, m_data.bulan FROM td_dekompose JOIN m_data ON td_dekompose.id_data = m_data.id_mddata ORDER BY td_dekompose.id_dekompose DESC LIMIT 1");
+    $MaPrediksi = $sqlMAPrediksi[0]['MA'];
+    $CmaPrediksi = ($MaPrediksi + $sqlCMa[0]['MA']) / 2;
+    $x = $dataNilai[0]['banyak_data'];
+    $x2 = pow($x,2);
+    $ST = $nilaiA+$nilaiB*$x;
+    $TT = round($CmaPrediksi / $ST,2);
+    $bulan = 0;
+    if($sqlCMa[0]['bulan'] == 12){
+        $bulan += 1;
+    }else{
+        $bulan += $sqlCMa[0]['bulan'] +1;
+    }
+    $CT = query("SELECT td_dekompose.ct AS ct FROM m_data JOIN td_dekompose ON m_data.id_mddata = td_dekompose.id_data WHERE m_data.bulan = '$bulan' LIMIT 1");
+    $ft = round($ST+$TT+$CT[0]['ct']+1);
+    $_SESSION['ft'] = $ft;
+    // var_dump($sqlCMa);
+    // var_dump($MaPrediksi);
+    // var_dump($x);
+    // var_dump($x2);
+    // $sql = 
+    // header("Location: hasil.php");
 }
 function hapus(){
     global $conn;

@@ -102,6 +102,8 @@ if(isset($_POST["submitperiode"])){
                         <?php
                         $dataDMA = query("SELECT a.id_dma, b.id_mddata, b.tahun,c.nama_bulan,b.periode, b.produksi, a.ma2, a.dma2, a.a, a.b, a.ft, a.error, a.mape FROM td_dma a JOIN m_data b ON a.id_data = b.id_mddata JOIN m_bulan c ON b.bulan = c.id_bulan");
                         $index = 1;
+                        $dataMape = query("SELECT COUNT(mape) AS banyak_mape, SUM(mape) as total_mape FROM td_dma WHERE mape > 0");
+                        $mapetotal = round($dataMape[0]['total_mape']/$dataMape[0]['banyak_mape'],2);
                         foreach($dataDMA as $data):
                         ?>
                         <tr>
@@ -118,9 +120,54 @@ if(isset($_POST["submitperiode"])){
                             <td><?= $data["mape"] ?></td>
                         </tr>
                         <?php endforeach; ?>
+                        <!-- <tr>
+                            <td colspan="11"><?= $mapetotal ?></td>
+                        </tr> -->
                     </tbody>
                 </table>
-
+                <div class="totalMape mt-4">
+                    <?php
+                        $dataMape = query("SELECT COUNT(mape) AS banyak_mape, SUM(mape) as total_mape FROM td_dma WHERE mape > 0");
+                        $mapetotal = round($dataMape[0]['total_mape']/$dataMape[0]['banyak_mape'],2);
+                        ?>
+                    <div class="row">
+                        <div class="col-4 offset-8">
+                            <p>MAPE (Mean Absolute Percentage Error) : <span
+                                    class="d-inline-block font-weight-bold"><?= $mapetotal?> %</span></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <span>Hasil Prediksi</span>
+                        <table class="table table-striped table-bordered mt-3" style="width: 100%">
+                            <thead>
+                                <tr>
+                                    <td>Tahun Berikutnya</td>
+                                    <td>Bulan</td>
+                                    <td>Ft</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <?php
+                                        $dataPrediksi = query("SELECT td_dma.id_dma, m_data.tahun, m_data.bulan, td_dma.a, td_dma.b FROM td_dma JOIN m_data ON m_data.id_mddata = td_dma.id_data ORDER BY id_dma DESC LIMIT 1");
+                                        $tahun = 0;
+                                        $bulan = $dataPrediksi[0]['bulan'];
+                                        $dateObj   = DateTime::createFromFormat('!m', $bulan+1);$monthName = $dateObj->format('F');
+                                        if($bulan == 12){
+                                            $tahun += $dataPrediksi[0]['tahun'] + 1;
+                                        }else{
+                                        $tahun += $dataPrediksi[0]['tahun'];
+                                        }
+                                        $ft = ($dataPrediksi[0]['a']*1) + ($dataPrediksi[0]['b']*1);
+                                        ?>
+                                    <td><?= $tahun ?></td>
+                                    <td><?= $monthName ?></td>
+                                    <td><?= $ft?></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div class="metodeDekompose d-none" id="dekompose" style="margin-bottom: 100px;">
                 <h2>Metode DEKOMPOSE</h2>
@@ -170,6 +217,50 @@ if(isset($_POST["submitperiode"])){
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                <div class="totalMape mt-4">
+                    <?php
+                        $dataMape = query("SELECT COUNT(mape) AS banyak_mape, SUM(mape) as total_mape FROM td_dekompose WHERE mape > 0");
+                        $mapetotal = round($dataMape[0]['total_mape']/$dataMape[0]['banyak_mape'],2);
+                        ?>
+                    <div class="row">
+                        <div class="col-5 offset-7 d-flex justify-content-end">
+                            <p class="text-end">MAPE (Mean Absolute Percentage Error) : <span
+                                    class=" font-weight-bold"><?= $mapetotal?>
+                                    %</span></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <span>Hasil Prediksi</span>
+                        <table class="table table-striped table-bordered mt-3" style="width: 100%">
+                            <thead>
+                                <tr>
+                                    <td>Tahun Berikutnya</td>
+                                    <td>Bulan</td>
+                                    <td>Ft</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <?php
+                                        $dataPrediksi = query("SELECT td_dma.id_dma, m_data.tahun, m_data.bulan, td_dma.a, td_dma.b FROM td_dma JOIN m_data ON m_data.id_mddata = td_dma.id_data ORDER BY id_dma DESC LIMIT 1");
+                                        $tahun = 0;
+                                        $bulan = $dataPrediksi[0]['bulan'];
+                                        $dateObj   = DateTime::createFromFormat('!m', $bulan+1);$monthName = $dateObj->format('F');
+                                        if($bulan == 12){
+                                            $tahun += $dataPrediksi[0]['tahun'] + 1;
+                                        }else{
+                                            $tahun += $dataPrediksi[0]['tahun'];
+                                        }
+                                        $ft = ($dataPrediksi[0]['a']*1) + ($dataPrediksi[0]['b']*1);
+                                        ?>
+                                    <td><?= $tahun ?></td>
+                                    <td><?= $monthName ?></td>
+                                    <td><?= $_SESSION['ft']?></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
