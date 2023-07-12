@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="style/scss/bootstrap.css" />
 <nav class="navbar navbar-expand-lg navbar-light bg-light" style="margin: 0; padding-right: 0; padding-left: 0 ">
     <a class="navbar-brand brand col-2" href="index.php">SISTEM PERBANDINGAN</a>
     <div class="collapse navbar-collapse d-flex justify-content-center" id="navbarNav">
@@ -28,3 +29,5 @@
         <button class="btn btn-danger" name="submit_logout">Logout</button>
     </form>
 </nav>
+<script src="js/jquery.js"></script>
+<script src="js/bootstrap.js"></script>
