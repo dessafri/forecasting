@@ -57,7 +57,7 @@ if(isset($_POST["submit_kriteria"])){
                 <h1 class="h1-brand" style="font-size:22px;">METODE DEKOMPOSE</h1>
             </div>
             <div class="metodeDekompose" id="dekompose" style="margin-bottom: 100px;">
-                <!-- <canvas id="myChartDekompose"></canvas> -->
+                <canvas id="myChartDekompose"></canvas>
                 <table id="tabel5" class="table table-striped table-bordered" style="width: 100%">
                     <thead class="table-data">
                         <tr>
@@ -102,6 +102,50 @@ if(isset($_POST["submit_kriteria"])){
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                <div class="totalMape mt-4">
+                    <?php
+                        $dataMape = query("SELECT COUNT(mape) AS banyak_mape, SUM(mape) as total_mape FROM td_dekompose WHERE mape > 0");
+                        $mapetotal = round($dataMape[0]['total_mape']/$dataMape[0]['banyak_mape'],2);
+                        ?>
+                    <div class="row">
+                        <div class="col-5 offset-7 d-flex justify-content-end">
+                            <p class="text-end">MAPE (Mean Absolute Percentage Error) : <span
+                                    class=" font-weight-bold"><?= $mapetotal?>
+                                    %</span></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <span>Hasil Prediksi</span>
+                        <table class="table table-striped table-bordered mt-3" style="width: 100%">
+                            <thead>
+                                <tr>
+                                    <td>Tahun Berikutnya</td>
+                                    <td>Bulan</td>
+                                    <td>Ft</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <?php
+                                        $dataPrediksi = query("SELECT td_dma.id_dma, m_data.tahun, m_data.bulan, td_dma.a, td_dma.b FROM td_dma JOIN m_data ON m_data.id_mddata = td_dma.id_data ORDER BY id_dma DESC LIMIT 1");
+                                        $tahun = 0;
+                                        $bulan = $dataPrediksi[0]['bulan'];
+                                        $dateObj   = DateTime::createFromFormat('!m', $bulan+1);$monthName = $dateObj->format('F');
+                                        if($bulan == 12){
+                                            $tahun += $dataPrediksi[0]['tahun'] + 1;
+                                        }else{
+                                            $tahun += $dataPrediksi[0]['tahun'];
+                                        }
+                                        $ft = ($dataPrediksi[0]['a']*1) + ($dataPrediksi[0]['b']*1);
+                                        ?>
+                                    <td><?= $tahun ?></td>
+                                    <td><?= $monthName ?></td>
+                                    <td><?= $_SESSION['ft']?></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -122,160 +166,80 @@ if(isset($_POST["submit_kriteria"])){
         integrity="sha512-6PM0qYu5KExuNcKt5bURAoT6KCThUmHRewN3zUFNaoI6Di7XJPTMoT6K0nsagZKk2OB4L7E3q1uQKHNHd4stIQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
     <script>
     $(document).ready(function() {
-        var table = $("#example").DataTable({
-            lengthChange: true,
-            buttons: [{
-                    extend: "excel",
-                    text: "Export Excel",
-                    className: "btn-success",
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "pdf",
-                    text: "Export PDF",
-                    className: "btn-danger"
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "colvis",
-                    text: "SORTIR"
-                },
-            ],
-        });
-        table
-            .buttons()
-            .container()
-            .appendTo("#example_wrapper .col-md-6:eq(0)");
-        var table = $("#tabel2").DataTable({
-            lengthChange: true,
-            buttons: [{
-                    extend: "excel",
-                    text: "Export Excel",
-                    className: "btn-success",
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "pdf",
-                    text: "Export PDF",
-                    className: "btn-danger"
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "colvis",
-                    text: "SORTIR"
-                },
-            ],
-        });
-        table
-            .buttons()
-            .container()
-            .appendTo("#tabel2_wrapper .col-md-6:eq(0)");
-        var table = $("#tabel3").DataTable({
-            lengthChange: true,
-            buttons: [{
-                    extend: "excel",
-                    text: "Export Excel",
-                    className: "btn-success",
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "pdf",
-                    text: "Export PDF",
-                    className: "btn-danger"
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "colvis",
-                    text: "SORTIR"
-                },
-            ],
-        });
-        table
-            .buttons()
-            .container()
-            .appendTo("#tabel3_wrapper .col-md-6:eq(0)");
-        var table = $("#tabel4").DataTable({
-            lengthChange: true,
-            buttons: [{
-                    extend: "excel",
-                    text: "Export Excel",
-                    className: "btn-success",
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "pdf",
-                    text: "Export PDF",
-                    className: "btn-danger"
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "colvis",
-                    text: "SORTIR"
-                },
-            ],
-        });
-        table
-            .buttons()
-            .container()
-            .appendTo("#tabel4_wrapper .col-md-6:eq(0)");
-        var table = $("#tabel5").DataTable({
-            lengthChange: true,
-            buttons: [{
-                    extend: "excel",
-                    text: "Export Excel",
-                    className: "btn-success",
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "pdf",
-                    text: "Export PDF",
-                    className: "btn-danger"
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "colvis",
-                    text: "SORTIR"
-                },
-            ],
-        });
-        table
-            .buttons()
-            .container()
-            .appendTo("#tabel5_wrapper .col-md-6:eq(0)");
+        const ctx2 = document.getElementById('myChartDekompose');
+        fetch('dataDekompose.php')
+            .then(res => res.json())
+            .then(response => {
+                console.log(response)
+                const prod = [];
+                const ft = [];
+                const bulan = [];
+                response.forEach(item => {
+                    prod.push(item.produksi);
+                    ft.push(item.ft);
+                    bulan.push(item.nama_bulan);
+                });
+                new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: bulan,
+                        datasets: [{
+                                label: 'Produksi',
+                                data: prod,
+                                borderColor: 'rgb(100, 10, 192)',
+                                backgroundColor: 'purple',
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'FT',
+                                data: ft,
+                                borderColor: 'rgb(255, 150, 1)',
+                                backgroundColor: 'orange',
+                                yAxisID: 'y1'
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            // mode: 'index',
+                            intersect: false,
+                            axis: 'x'
+                        },
+                        // stacked: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Hasil Forecasting Metode DMA'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+
+
+                                // grid line settings
+                                grid: {
+                                    drawOnChartArea: false, // only want the grid lines for one axis to show up
+                                },
+                            },
+                        }
+                    }
+                });
+            })
     });
     </script>
 </body>

@@ -54,7 +54,7 @@ if(isset($_POST["submit_logout"])){
                 <h1 class="h1-brand" style="font-size:22px;">METODE DOUBLE MOVING AVERAGE</h1>
             </div>
             <div class="metodeDMA" id="dma" style="margin-bottom: 100px;">
-                <!-- <canvas id="myChart"></canvas> -->
+                <canvas id="myChart"></canvas>
                 <table id="tabel4" class="table table-striped table-bordered" style="width: 100%">
                     <thead class="table-data">
                         <tr>
@@ -156,100 +156,76 @@ if(isset($_POST["submit_logout"])){
         integrity="sha512-6PM0qYu5KExuNcKt5bURAoT6KCThUmHRewN3zUFNaoI6Di7XJPTMoT6K0nsagZKk2OB4L7E3q1uQKHNHd4stIQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
     <script>
     $(document).ready(function() {
-        var table = $("#example").DataTable({
-            lengthChange: true,
-            buttons: [{
-                    extend: "excel",
-                    text: "Export Excel",
-                    className: "btn-success",
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "pdf",
-                    text: "Export PDF",
-                    className: "btn-danger"
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "colvis",
-                    text: "SORTIR"
-                },
-            ],
-        });
-        table
-            .buttons()
-            .container()
-            .appendTo("#example_wrapper .col-md-6:eq(0)");
-        var table = $("#tabel2").DataTable({
-            lengthChange: true,
-            buttons: [{
-                    extend: "excel",
-                    text: "Export Excel",
-                    className: "btn-success",
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "pdf",
-                    text: "Export PDF",
-                    className: "btn-danger"
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "colvis",
-                    text: "SORTIR"
-                },
-            ],
-        });
-        table
-            .buttons()
-            .container()
-            .appendTo("#tabel2_wrapper .col-md-6:eq(0)");
-        var table = $("#tabel3").DataTable({
-            lengthChange: true,
-            buttons: [{
-                    extend: "excel",
-                    text: "Export Excel",
-                    className: "btn-success",
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "pdf",
-                    text: "Export PDF",
-                    className: "btn-danger"
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "colvis",
-                    text: "SORTIR"
-                },
-            ],
-        });
-        table
-            .buttons()
-            .container()
-            .appendTo("#tabel3_wrapper .col-md-6:eq(0)");
+        const ctx = document.getElementById('myChart');
+        fetch('dataDMA.php')
+            .then(res => res.json())
+            .then(response => {
+                const prod = [];
+                const ft = [];
+                const bulan = [];
+                response.forEach(item => {
+                    prod.push(item.produksi);
+                    ft.push(item.ft);
+                    bulan.push(item.nama_bulan);
+                });
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: bulan,
+                        datasets: [{
+                                label: 'Produksi',
+                                data: prod,
+                                borderColor: 'rgb(75, 192, 192)',
+                                backgroundColor: 'cyan',
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'FT',
+                                data: ft,
+                                borderColor: 'rgb(75, 150, 1)',
+                                backgroundColor: 'green',
+                                yAxisID: 'y1'
+                            },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        stacked: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Hasil Forecasting Metode DMA'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+
+                                // grid line settings
+                                grid: {
+                                    drawOnChartArea: false, // only want the grid lines for one axis to show up
+                                },
+                            },
+                        }
+                    }
+                });
+            })
     });
     </script>
 </body>

@@ -48,6 +48,111 @@ function logout()
     $_SESSION['id'] = '';
     $_SESSION['role'] = '';
 }
+function buatKriteria($data){
+    global $conn;
+    $nama = $data["nama"];
+    $keterangan = $data["keterangan"];
+    $nilai = $data["nilai"];
+    
+    $sqlKriteria = "INSERT INTO kriteria (id_kriteria, nama_kriteria) VALUES (NULL, '$nama')";
+    mysqli_query($conn, $sqlKriteria);
+    $sqlKriteria = query(
+        'SELECT * FROM kriteria ORDER BY id_kriteria DESC LIMIT 1'
+    );
+    $idKriteria = $sqlKriteria[0]['id_kriteria'];
+    $sqlDetailKriteria = 'INSERT INTO detail_kriteria (id_detail_kriteria, id_kriteria, keterangan, nilai) VALUES';
+    $index = 0;
+    foreach($keterangan as $keterangan){
+        $nilai1 = $nilai[$index++];
+        $sqlDetailKriteria .=
+                        "(NULL,'" .
+                        $idKriteria .
+                        "','" .
+                        $keterangan .
+                        "','" .
+                        $nilai1 .
+                        "'),";
+    }
+    $sqlDetailKriteria = rtrim($sqlDetailKriteria, ', ');
+    mysqli_query($conn, $sqlDetailKriteria);
+}
+function editKriteria($data){
+    global $conn;
+    $idKriteria = $data["id_kriteria"];
+    $nama = $data["nama"];
+    $keterangan = $data["keterangan"];
+    $nilai = $data["nilai"];
+
+    $sqlUpdateKriteria = "UPDATE kriteria SET nama_kriteria= '$nama' WHERE id_kriteria = '$idKriteria'";
+    mysqli_query($conn,$sqlUpdateKriteria);
+
+    $sqlDelete = "DELETE FROM detail_kriteria WHERE id_kriteria = '$idKriteria'";
+    mysqli_query($conn,$sqlDelete);
+    $sqlDetailKriteria = 'INSERT INTO detail_kriteria (id_detail_kriteria, id_kriteria, keterangan, nilai) VALUES';
+    $index = 0;
+    foreach($keterangan as $keterangan){
+        $nilai1 = $nilai[$index++];
+        $sqlDetailKriteria .=
+                        "(NULL,'" .
+                        $idKriteria .
+                        "','" .
+                        $keterangan .
+                        "','" .
+                        $nilai1 .
+                        "'),";
+    }
+    $sqlDetailKriteria = rtrim($sqlDetailKriteria, ', ');
+    mysqli_query($conn, $sqlDetailKriteria);
+}
+function deleteKriteria($data){
+    global $conn;
+
+    $id = $data['id'];
+    mysqli_query($conn, "DELETE FROM kriteria WHERE id_kriteria='$id'");
+    mysqli_query($conn, "DELETE FROM detail_kriteria WHERE id_kriteria='$id'");
+}
+function deletePEserta($data){
+    global $conn;
+
+    $id = $data['id'];
+    mysqli_query($conn, "DELETE FROM peserta WHERE nik='$id'");
+    mysqli_query($conn, "DELETE FROM perkiraan_perbatasan WHERE nik='$id'");
+    mysqli_query($conn, "DELETE FROM perangkingan_alternatif WHERE nik='$id'");
+    mysqli_query($conn, "DELETE FROM normalisasi_mabac WHERE nik='$id'");
+    mysqli_query($conn, "DELETE FROM normaliasi_entropy WHERE nik='$id'");
+    mysqli_query($conn, "DELETE FROM matrix_tertimbang WHERE nik='$id'");
+    mysqli_query($conn, "DELETE FROM entropy_tiap_atribut WHERE nik='$id'");
+    mysqli_query($conn, "DELETE FROM jawaban WHERE nik='$id'");
+}
+function buatPeserta($data){
+    global $conn;
+    $nik = $data["nik"];
+    $nama = $data["nama"];
+    $jenis_kelamin = $data["jenis_kelamin"];
+    $tanggal_lahir = $data["date"];
+    $alamat = $data["alamat"];
+    $alamatUpper = strtoupper($alamat);
+    $rt = $data["rt"];
+    $rw = $data["rw"];
+
+    mysqli_query($conn, "INSERT INTO peserta (id_peserta, nik, nama, jenis_kelamin, tanggal_lahir, alamat, rt, rw) VALUES (NULL, '$nik', '$nama', '$jenis_kelamin', '$tanggal_lahir', '$alamatUpper', '$rt', '$rw')");
+    
+    $keterangan = $data["keterangan"];
+    $sqljawaban = "INSERT INTO jawaban (id_jawaban, nik, id_kriteria, jawaban_peserta) VALUES";
+    foreach($keterangan as $idKriteria){
+        $jawaban = $data[$idKriteria];
+        $sqljawaban .=
+                        "(NULL,'" .
+                        $nik .
+                        "','" .
+                        $idKriteria .
+                        "','" .
+                        $jawaban .
+                        "'),";
+    }
+    $sqljawaban = rtrim($sqljawaban, ', ');
+    mysqli_query($conn, $sqljawaban);
+}
 
 function buatHasil($inputPeriode){
     global $conn;
@@ -180,6 +285,7 @@ function buatHasil($inputPeriode){
     // dekompose
     $arrayMADekompose = array();
     $batasBawahMaDekompose = 0;
+    $inputPeriode = 4;
     $batasAtasMaDekompose = $inputPeriode;
     foreach($dataforecast as $index=> $data){
         if($index < $inputPeriode){
