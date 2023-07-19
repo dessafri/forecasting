@@ -10,11 +10,8 @@ if ($_SESSION['id'] != '1') {
 if(isset($_POST["submit_logout"])){
   logout($_POST);
 }
-if(isset($_POST["submit_peserta"])){
-  buatPeserta($_POST);
-}
-if(isset($_POST["edit_peserta"])){
-  var_dump($_POST);
+if(isset($_POST["submit_data"])){
+  buatdata($_POST);
 }
 
 ?>
@@ -47,6 +44,7 @@ if(isset($_POST["edit_peserta"])){
         <div class="container">
             <div style="display: flex; justify-content: space-between">
                 <h1 class="h1-brand">Data Peramalan</h1>
+                <button class="btn btn-primary" data-toggle="modal" data-target="#modaldata">Tambah Data</button>
             </div>
             <div class="tabel">
                 <table id="example" class="table table-striped table-bordered" style="width: 100%">
@@ -57,6 +55,7 @@ if(isset($_POST["edit_peserta"])){
                             <th>BULAN</th>
                             <th>PERIODE</th>
                             <th>PRODUKSI</th>
+                            <th>AKSI</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -71,13 +70,22 @@ if(isset($_POST["edit_peserta"])){
                           m_data");
                         $index = 1;
                         foreach($dataPeramalan as $dataPeramalan):
+                            $bulan = $dataPeramalan['bulan'];
+                                        $dateObj   = DateTime::createFromFormat('!m', $bulan);
+                                        $monthName = $dateObj->format('F');
                         ?>
                         <tr>
                             <td><?= $index++ ?></td>
                             <td><?= $dataPeramalan["tahun"]?></td>
-                            <td><?= $dataPeramalan["bulan"]?></td>
+                            <td><?= $monthName?></td>
                             <td><?= $dataPeramalan["periode"]?></td>
                             <td><?= $dataPeramalan["produksi"]?></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm"
+                                    onclick="editdata(<?= $dataPeramalan['id_mddata']?>)">Edit</button>
+                                <button class="btn btn-danger btn-sm"
+                                    onclick="hapusdata(<?= $dataPeramalan['id_mddata']?>)">Hapus</button>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -86,11 +94,11 @@ if(isset($_POST["edit_peserta"])){
         </div>
     </section>
 
-    <div class="modal fade" id="modalPeserta" tabindex="-1" aria-labelledby="modalPesertaLabel" aria-hidden="true">
+    <div class="modal fade" id="modaldata" tabindex="-1" aria-labelledby="modaldataLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalPesertaLabel">Tambah Peserta</h5>
+                    <h5 class="modal-title" id="modaldataLabel">Tambah Data</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -99,32 +107,21 @@ if(isset($_POST["edit_peserta"])){
                     <form action="" method="POST">
                         <div class="biodata" id="biodata">
                             <div class="form-group">
-                                <label for="nama">Nama</label>
-                                <input type="text" required name="nama" class="form-control" id="nama" />
+                                <label for="tahun">Tahun</label>
+                                <input type="text" required name="tahun" class="form-control" id="tahun" />
                             </div>
-                        </div>
-                        <div class="pertanyaan d-none" id="pertanyaan">
-                            <?php
-                            $dataKriteria = query("SELECT * FROM kriteria");
-                            foreach($dataKriteria as $dataKriteria) :
-                            ?>
                             <div class="form-group">
-                                <label for="exampleFormControlSelect1"><?= $dataKriteria["nama_kriteria"] ?></label>
-                                <input type="hidden" name="keterangan[]" value="<?= $dataKriteria["id_kriteria"] ?>">
-                                <select class="form-control" required id="exampleFormControlSelect1"
-                                    name="<?= $dataKriteria["id_kriteria"] ?>">
-                                    <option value="0">- Silahkan Pilih Sesuai Kriteria -</option>
-                                    <?php
-                                    $idKriteria = $dataKriteria["id_kriteria"]; 
-                                    $dataDetailKriteria = query("SELECT * FROM detail_kriteria WHERE id_kriteria = '$idKriteria'");
-                                    foreach($dataDetailKriteria as $dataDetailKriteria):
-                                    ?>
-                                    <option value="<?=$dataDetailKriteria["nilai"] ?>">
-                                        <?= $dataDetailKriteria["keterangan"]?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <label for="bulan">Bulan Dalam Angka</label>
+                                <input type="text" required name="bulan" class="form-control" id="bulan" />
                             </div>
-                            <?php endforeach; ?>
+                            <div class="form-group">
+                                <label for="periode">Periode</label>
+                                <input type="text" required name="periode" class="form-control" id="periode" />
+                            </div>
+                            <div class="form-group">
+                                <label for="produksi">Produksi</label>
+                                <input type="text" required name="produksi" class="form-control" id="produksi" />
+                            </div>
                         </div>
                 </div>
                 <div class="row">
@@ -133,10 +130,7 @@ if(isset($_POST["edit_peserta"])){
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">
                                 Close
                             </button>
-                            <button type="button" class="btn btn-primary d-none" id="sebelumnya">Sebelumnya</button>
-                            <button type="button" class="btn btn-primary" id="selanjutnya">Selanjutnya</button>
-                            <button type="submit" class="btn btn-primary d-none" name="submit_peserta"
-                                id="simpan">Simpan</button>
+                            <button type="submit" class="btn btn-primary" name="submit_data" id="simpan">Simpan</button>
                         </div>
                     </div>
                     </form>
@@ -144,7 +138,7 @@ if(isset($_POST["edit_peserta"])){
             </div>
         </div>
     </div>
-    <div id="editModalPeserta"></div>
+    <div id="editModal"></div>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous">
     </script>
@@ -167,6 +161,111 @@ if(isset($_POST["edit_peserta"])){
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+    function editdata(id) {
+        let iddata = id;
+        let formData = new FormData();
+        formData.append("id", iddata);
+        fetch('dataperamalan.php', {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            return response.json()
+        }).then(res => {
+            console.log(res);
+            let modal = `
+            <div class="modal fade" id="editmodaldata" tabindex="-1" aria-labelledby="modaldataLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modaldataLabel">Edit Data</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="" method="POST">
+                        <div class="biodata" id="biodata">
+                            <div class="form-group">
+                                <label for="tahun">Tahun</label>
+                                <input type="text" required name="tahun" value="${res[0].tahun}" class="form-control" id="edittahun" />
+                                <input type="hidden" required name="tahun" value="${res[0].id_mddata}" class="form-control" id="editid" />
+                            </div>
+                            <div class="form-group">
+                                <label for="bulan">Bulan Dalam Angka</label>
+                                <input type="text" value="${res[0].bulan}" required name="bulan" class="form-control" id="editbulan" />
+                            </div>
+                            <div class="form-group">
+                                <label for="periode">Periode</label>
+                                <input type="text" value="${res[0].periode}" required name="periode" class="form-control" id="editperiode" />
+                            </div>
+                            <div class="form-group">
+                                <label for="produksi">Produksi</label>
+                                <input type="text" value="${res[0].produksi}" required name="produksi" class="form-control" id="editproduksi" />
+                            </div>
+                        </div>
+                </div>
+                <div class="row">
+                    <div class="col col-12">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                Close
+                            </button>
+                            <button type="submit" class="btn btn-primary" name="edit_data" id="editsimpan">Simpan</button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+            `
+            $("#editModal").html(modal);
+            $("#editmodaldata").modal('show');
+            $("#editsimpan").on('click', function() {
+                let id = $("#editid").val();
+                let tahun = $("#edittahun").val();
+                let bulan = $("#editbulan").val();
+                let periode = $("#editperiode").val();
+                let produksi = $("#editproduksi").val();
+                let formData = new FormData();
+                formData.append("id", id);
+                formData.append("tahun", tahun);
+                formData.append("bulan", bulan);
+                formData.append("periode", periode);
+                formData.append("produksi", produksi);
+                fetch('updatedata.php', {
+                    method: 'POST',
+                    body: formData
+                }).then(res => {
+                    return res.json();
+                }).then(response => {
+                    alert("Update Data Berhasil")
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                })
+            })
+        })
+    }
+
+    function hapusdata(id) {
+        if (confirm('Apakah Yakin Untuk Menghapus Data ?')) {
+            let iddata = id;
+            let formData = new FormData();
+            formData.append("id", iddata)
+            fetch('deletedata.php', {
+                method: 'POST',
+                body: formData
+            }).then(res => {
+                return res.json()
+            }).then(res => {
+                alert("Data Berhasil di Hapus")
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            })
+        }
+    }
     $(document).ready(function() {
         var table = $("#example").DataTable({
             lengthChange: true,
@@ -199,130 +298,6 @@ if(isset($_POST["edit_peserta"])){
             .buttons()
             .container()
             .appendTo("#example_wrapper .col-md-6:eq(0)");
-
-        $("#selanjutnya").on("click", function() {
-            $("#sebelumnya").removeClass("d-none");
-            $("#selanjutnya").addClass("d-none");
-            $("#biodata").addClass("d-none");
-            $("#pertanyaan").removeClass("d-none");
-            $("#simpan").removeClass("d-none");
-        })
-        $("#sebelumnya").on("click", function() {
-            $("#sebelumnya").addClass("d-none");
-            $("#selanjutnya").removeClass("d-none");
-            $("#biodata").removeClass("d-none");
-            $("#pertanyaan").addClass("d-none");
-            $("#simpan").addClass("d-none");
-        })
-        $(".btn-edit-peserta").on("click", function() {
-            let nik = $(this).attr("data-id");
-            let formData = new FormData();
-            formData.append('id', nik);
-            fetch('dataPeserta.php', {
-                method: 'POST',
-                body: formData
-            }).then(response => {
-                return response.json()
-            }).then(responseJson => {
-                let data = responseJson
-                let modal = `
-                <div class="modal fade" id="modalEditPeserta" tabindex="-1" aria-labelledby="modalEditPesertaLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="modalEditPesertaLabel">Edit Peserta</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <form action="" method="POST">
-                                    <div class="biodata" id="biodataEdit">
-                                        <div class="form-group">
-                                            <label for="nik">Nik</label>
-                                            <input type="text" disabled value="${data[0].nik}" class="form-control" name="nik" id="nik"
-                                                aria-describedby="emailHelp" />
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="nama">Nama</label>
-                                            <input type="text" disabled name="nama" value='${data[0].nama}' class="form-control" id="nama" />
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="exampleFormControlSelect1">Jenis Kelamin</label>
-                                            <select class="form-control" disabled id="exampleFormControlSelect1" name="jenis_kelamin">
-                                                <option value="${data[0].jenis_kelamin}" selected>${data[0].jenis_kelamin}</option>
-                                                <option value="LAKI-LAKI">LAKI-LAKI</option>
-                                                <option value="PEREMPUAN">PEREMPUAN</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="control-label" for="date">Date</label>
-                                            <input class="form-control" disabled value='${data[0].tanggal_lahir}' id="date" name="date" placeholder="MM/DD/YYY" type="date" />
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="alamat">Alamat</label>
-                                            <input type="text" disabled value='${data[0].alamat}' class="form-control" name="alamat" id="alamat" />
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="rt">Rt</label>
-                                            <input type="text" disabled value="${data[0].rt}" class="form-control" name="rt" id="rt" />
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="rw">Rw</label>
-                                            <input type="text" disabled value="${data[0].rw}" class="form-control" name="rw" id="rw" />
-                                        </div>
-                                    </div>
-                                    <div class="pertanyaan d-none" id="pertanyaanEdit">
-                                    </div>
-                            </div>
-                            <div class="row">
-                                <div class="col col-12">
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                            Close
-                                        </button>
-                                        <button type="button" class="btn btn-primary d-none" id="sebelumnyaEdit">Sebelumnya</button>
-                                        <button type="button" class="btn btn-primary" id="selanjutnyaEdit">Selanjutnya</button>
-                                    </div>
-                                </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>`
-
-                let pertanyaan = data.map((data, index) => ` 
-                     <div class="form-group">
-                        <label for="exampleFormControlSelect1">${data.nama_kriteria}</label>
-                        <input type="hidden" name="keterangan[]" value="${data.id_kriteria}"/>
-                        <select class="form-control optionDataPeserta" id="edit${index++}"
-                            name="${data.id_kriteria}">
-                            <option value="${data.jawaban_peserta}" selected="selected">${data.pilihan_peserta}</option>
-                            <?php
-                            ?>
-                        </select>
-                    </div>
-                    `)
-
-                $("#editModalPeserta").html(modal);
-                $("#modalEditPeserta").modal("show");
-                $("#selanjutnyaEdit").on("click", function() {
-                    $("#pertanyaanEdit").html(pertanyaan);
-                    $("#sebelumnyaEdit").removeClass("d-none");
-                    $("#selanjutnyaEdit").addClass("d-none");
-                    $("#biodataEdit").addClass("d-none");
-                    $("#pertanyaanEdit").removeClass("d-none");
-                    $("#simpanEdit").removeClass("d-none");
-                })
-                $("#sebelumnyaEdit").on("click", function() {
-                    $("#sebelumnyaEdit").addClass("d-none");
-                    $("#selanjutnyaEdit").removeClass("d-none");
-                    $("#biodataEdit").removeClass("d-none");
-                    $("#pertanyaanEdit").addClass("d-none");
-                    $("#simpanEdit").addClass("d-none");
-                })
-            })
-        })
         $('.btn-delete-peserta').on("click", function() {
             let id = $(this).attr('data-id');
             Swal.fire({

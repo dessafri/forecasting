@@ -13,6 +13,7 @@ if(isset($_POST["submit_logout"])){
 if(isset($_POST["submit_kriteria"])){
   buatKriteria($_POST);
 }
+hasilDekompose();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -215,7 +216,7 @@ if(isset($_POST["submit_kriteria"])){
                         plugins: {
                             title: {
                                 display: true,
-                                text: 'Hasil Forecasting Metode DMA'
+                                text: 'Hasil Forecasting Metode DEKOMPOSISI'
                             }
                         },
                         scales: {

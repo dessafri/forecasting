@@ -7,6 +7,14 @@ if ($_SESSION['id'] != '1') {
     exit();
 }
 
+$periode = $_SESSION["periode"];
+
+if(isset($_POST["submitperiode"])){
+    $periode = $_POST["periode"];
+    $_SESSION["periode"] = $periode;
+    buatHasil($periode);
+}
+
 if(isset($_POST["submit_logout"])){
   logout($_POST);
 }
@@ -50,10 +58,26 @@ if(isset($_POST["submit_logout"])){
     </section>
     <section class="content">
         <div class="container">
-            <div class="mb-4" style="display: flex; justify-content: space-between">
-                <h1 class="h1-brand" style="font-size:22px;">METODE DOUBLE MOVING AVERAGE</h1>
+            <div class="d-flex justify-content-between" id="info">
+                <p style="font-size: 16px;">Periode Pengukuran : <span class="font-weight-bold"><?=$periode?> Periode
+                    </span></p>
+                <button class="btn btn-primary" onclick="gantiPeriode()">Ganti Periode Pengukuran</button>
             </div>
-            <div class="metodeDMA" id="dma" style="margin-bottom: 100px;">
+            <div class="form-input d-none" id="form">
+                <form method="post">
+                    <label for="exampleInputEmail1" class="text-center">Masukkan periode awal untuk di Hitung</label>
+                    <div class="form-group text-center d-block">
+                        <input type="text" name="periode" class="form-control text-center">
+                    </div>
+                    <div class="button text-center">
+                        <button type="submit" name="submitperiode" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+            <div class="metodeDMA d-none" id="dma" style="margin-bottom: 100px;">
+                <div class="mb-4" style="display: flex; justify-content: space-between">
+                    <h1 class="h1-brand" style="font-size:22px;">METODE DOUBLE MOVING AVERAGE</h1>
+                </div>
                 <canvas id="myChart"></canvas>
                 <table id="tabel4" class="table table-striped table-bordered" style="width: 100%">
                     <thead class="table-data">
@@ -158,7 +182,26 @@ if(isset($_POST["submit_logout"])){
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <script>
+    let periodePengukuran = '<?php echo $periode;?>';
+    console.log(periodePengukuran);
+    if (periodePengukuran > 0) {
+        $('#dma').removeClass('d-none');
+        $('#dekompose').removeClass('d-none');
+    } else {
+        $('#form').removeClass('d-none');
+        $('#info').addClass('d-none');
+    }
 
+    function gantiPeriode() {
+        $('#dma').addClass('d-none');
+        $('#dekompose').addClass('d-none');
+        $('#form').removeClass('d-none');
+        $('#info').removeClass('d-flex');
+        $('#info').addClass('d-none');
+
+    }
+    </script>
     <script>
     $(document).ready(function() {
         const ctx = document.getElementById('myChart');

@@ -76,40 +76,22 @@ function buatKriteria($data){
     $sqlDetailKriteria = rtrim($sqlDetailKriteria, ', ');
     mysqli_query($conn, $sqlDetailKriteria);
 }
-function editKriteria($data){
+function updatedata($data){
     global $conn;
-    $idKriteria = $data["id_kriteria"];
-    $nama = $data["nama"];
-    $keterangan = $data["keterangan"];
-    $nilai = $data["nilai"];
+    $id = $data["id"];
+    $tahun = $data["tahun"];
+    $bulan = $data["bulan"];
+    $periode = $data["periode"];
+    $produksi = $data["produksi"];
 
-    $sqlUpdateKriteria = "UPDATE kriteria SET nama_kriteria= '$nama' WHERE id_kriteria = '$idKriteria'";
-    mysqli_query($conn,$sqlUpdateKriteria);
-
-    $sqlDelete = "DELETE FROM detail_kriteria WHERE id_kriteria = '$idKriteria'";
-    mysqli_query($conn,$sqlDelete);
-    $sqlDetailKriteria = 'INSERT INTO detail_kriteria (id_detail_kriteria, id_kriteria, keterangan, nilai) VALUES';
-    $index = 0;
-    foreach($keterangan as $keterangan){
-        $nilai1 = $nilai[$index++];
-        $sqlDetailKriteria .=
-                        "(NULL,'" .
-                        $idKriteria .
-                        "','" .
-                        $keterangan .
-                        "','" .
-                        $nilai1 .
-                        "'),";
-    }
-    $sqlDetailKriteria = rtrim($sqlDetailKriteria, ', ');
-    mysqli_query($conn, $sqlDetailKriteria);
+    $sqlUpdateData = "UPDATE m_data SET tahun= '$tahun' , bulan= '$bulan' , periode= '$periode' , produksi= '$produksi' WHERE id_mddata = '$id'";
+    mysqli_query($conn,$sqlUpdateData);
 }
-function deleteKriteria($data){
+function deletedata($data){
     global $conn;
 
     $id = $data['id'];
-    mysqli_query($conn, "DELETE FROM kriteria WHERE id_kriteria='$id'");
-    mysqli_query($conn, "DELETE FROM detail_kriteria WHERE id_kriteria='$id'");
+    mysqli_query($conn, "DELETE FROM m_data WHERE id_mddata='$id'");
 }
 function deletePEserta($data){
     global $conn;
@@ -124,39 +106,31 @@ function deletePEserta($data){
     mysqli_query($conn, "DELETE FROM entropy_tiap_atribut WHERE nik='$id'");
     mysqli_query($conn, "DELETE FROM jawaban WHERE nik='$id'");
 }
-function buatPeserta($data){
+function buatdata($data){
     global $conn;
-    $nik = $data["nik"];
-    $nama = $data["nama"];
-    $jenis_kelamin = $data["jenis_kelamin"];
-    $tanggal_lahir = $data["date"];
-    $alamat = $data["alamat"];
-    $alamatUpper = strtoupper($alamat);
-    $rt = $data["rt"];
-    $rw = $data["rw"];
+    $tahun = $data["tahun"];
+    $bulan = $data["bulan"];
+    $periode = $data["periode"];
+    $produksi = $data["produksi"];
 
-    mysqli_query($conn, "INSERT INTO peserta (id_peserta, nik, nama, jenis_kelamin, tanggal_lahir, alamat, rt, rw) VALUES (NULL, '$nik', '$nama', '$jenis_kelamin', '$tanggal_lahir', '$alamatUpper', '$rt', '$rw')");
-    
-    $keterangan = $data["keterangan"];
-    $sqljawaban = "INSERT INTO jawaban (id_jawaban, nik, id_kriteria, jawaban_peserta) VALUES";
-    foreach($keterangan as $idKriteria){
-        $jawaban = $data[$idKriteria];
-        $sqljawaban .=
-                        "(NULL,'" .
-                        $nik .
-                        "','" .
-                        $idKriteria .
-                        "','" .
-                        $jawaban .
-                        "'),";
+    if(is_numeric($tahun) && is_numeric($bulan) && is_numeric($periode) && is_numeric($produksi)){
+        $result = mysqli_query($conn,"SELECT * FROM m_data WHERE bulan = '$bulan' AND periode = '$periode' AND tahun = '$tahun'");
+        if(mysqli_num_rows($result) > 0){
+            echo "<script>alert('Data Sudah Ada')</script>";
+            return;
+        }
+        mysqli_query($conn, "INSERT INTO m_data (id_mddata, bulan, periode, produksi, tahun ) VALUES (NULL, '$bulan', '$periode', '$produksi', '$tahun')");
+        echo "<script>alert('Tambah Data Berhasil')</script>";
+    }else{
+        echo "<script>alert('Harap Isi Dalam Format Angka')</script>";
     }
-    $sqljawaban = rtrim($sqljawaban, ', ');
-    mysqli_query($conn, $sqljawaban);
+
+    // mysqli_query($conn, "INSERT INTO peserta (id_peserta, nik, nama, jenis_kelamin, tanggal_lahir, alamat, rt, rw) VALUES (NULL, '$nik', '$nama', '$jenis_kelamin', '$tanggal_lahir', '$alamatUpper', '$rt', '$rw')");
 }
 
 function buatHasil($inputPeriode){
     global $conn;
-    hapus();
+    hapusdma();
     $dataforecast = query('SELECT id_mddata, produksi FROM m_data');
     $indexMA = $inputPeriode -1;
     $indexDMA = $indexMA*2;
@@ -261,14 +235,14 @@ function buatHasil($inputPeriode){
         $sqlFT = "UPDATE td_dma SET ft = '$val' WHERE id_data = '$id'";
          mysqli_query($conn, $sqlFT);
     }
-    $dataErr = query('SELECT b.id_data, a.produksi, b.a FROM m_data a JOIN td_dma b ON a.id_mddata = b.id_data');
+    $dataErr = query('SELECT b.id_data, a.produksi, b.a, b.ft FROM m_data a JOIN td_dma b ON a.id_mddata = b.id_data');
     $ERR = array();
     foreach($dataErr as $index=> $data){
         if($index < $indexFT){
             array_push($ERR, array('id'=>$data['id_data'], 'value'=>0));
         }
         else{
-            $result = $dataErr[$index]['produksi'] - $dataErr[$index]['a'];
+            $result = $dataErr[$index]['produksi'] - $dataErr[$index]['ft'];
             $mape = $result/$dataErr[$index]['produksi']*100;
             $abs = abs($mape);
             array_push($ERR, array('id'=>$data['id_data'], 'value'=>$result, 'mape'=>round($abs,3)));
@@ -282,10 +256,23 @@ function buatHasil($inputPeriode){
          mysqli_query($conn, $sqlErr);
     }
 
+    
+    // var_dump($sqlCMa);
+    // var_dump($MaPrediksi);
+    // var_dump($x);
+    // var_dump($x2);
+    // $sql = 
+    // header("Location: hasil.php");
+}
+function hasilDekompose(){
+    global $conn;
+    global $result;
+    hapusdekompose();
+    $dataforecast = query('SELECT id_mddata, produksi FROM m_data');
     // dekompose
+    $inputPeriode = 4;
     $arrayMADekompose = array();
     $batasBawahMaDekompose = 0;
-    $inputPeriode = 4;
     $batasAtasMaDekompose = $inputPeriode;
     foreach($dataforecast as $index=> $data){
         if($index < $inputPeriode){
@@ -457,17 +444,14 @@ function buatHasil($inputPeriode){
     $CT = query("SELECT td_dekompose.ct AS ct FROM m_data JOIN td_dekompose ON m_data.id_mddata = td_dekompose.id_data WHERE m_data.bulan = '$bulan' LIMIT 1");
     $ft = round($ST+$TT+$CT[0]['ct']+1);
     $_SESSION['ft'] = $ft;
-    // var_dump($sqlCMa);
-    // var_dump($MaPrediksi);
-    // var_dump($x);
-    // var_dump($x2);
-    // $sql = 
-    // header("Location: hasil.php");
 }
-function hapus(){
+function hapusdma(){
+    global $conn;
+    mysqli_query($conn, "DELETE FROM td_dma");
+}
+function hapusdekompose(){
     global $conn;
     mysqli_query($conn, "DELETE FROM td_dekompose");
-    mysqli_query($conn, "DELETE FROM td_dma");
 }
 
 ?>

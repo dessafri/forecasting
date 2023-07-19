@@ -2,12 +2,7 @@
 session_start();
 require './functions.php';
 $role = $_SESSION["role"];
-$banyakPeriode = query("SELECT count(id_dma) as banyak FROM `td_dma` WHERE dma2 = 0");
-if($banyakPeriode[0]['banyak'] > 0){
-    $_SESSION['periode'] = $banyakPeriode[0]['banyak'];
-}else{
-    $_SESSION['periode'] = 0;
-}
+
 if ($_SESSION['id'] != '1') {
     header('location: login.php');
     exit();
@@ -16,13 +11,7 @@ if ($_SESSION['id'] != '1') {
 if(isset($_POST["submit_logout"])){
     logout($_POST);
 }
-$periode = $_SESSION["periode"];
 
-if(isset($_POST["submitperiode"])){
-    $periode = $_POST["periode"];
-    $_SESSION["periode"] = $periode;
-    buatHasil($periode);
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -63,22 +52,6 @@ if(isset($_POST["submitperiode"])){
     </section>
     <section class="content">
         <div class="container">
-            <div class="d-flex justify-content-between" id="info">
-                <p style="font-size: 16px;">Periode Pengukuran : <span class="font-weight-bold"><?=$periode?> Periode
-                    </span></p>
-                <button class="btn btn-primary" onclick="gantiPeriode()">Ganti Periode Pengukuran</button>
-            </div>
-            <div class="form-input d-none" id="form">
-                <form method="post">
-                    <label for="exampleInputEmail1" class="text-center">Masukkan periode awal untuk di Hitung</label>
-                    <div class="form-group text-center d-block">
-                        <input type="text" name="periode" class="form-control text-center">
-                    </div>
-                    <div class="button text-center">
-                        <button type="submit" name="submitperiode" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
-            </div>
             <table class="table table-bordered mt-5">
                 <?php
                         $datamapedma = query("SELECT COUNT(mape) AS banyak_mape, SUM(mape) as total_mape FROM td_dma WHERE mape > 0");
@@ -105,6 +78,7 @@ if(isset($_POST["submitperiode"])){
                         <th scope="col">FT</th>
                         <th scope="col">MAPE TERBAIK</th>
                         <th scope="col">METODE</th>
+                        <th scope="col">Periode</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -115,7 +89,7 @@ if(isset($_POST["submitperiode"])){
                         <td><?= $ftDma ?></td>
                         <td><?= $mapetotalDma?></td>
                         <td><a href="dma.php">DMA</a></td>
-                        <td>
+                        <td><?= $_SESSION['periode']?> Periode</td>
                     </tr>
                     <tr>
                         <td><?= $_SESSION['ft']?></td>
@@ -150,25 +124,7 @@ if(isset($_POST["submitperiode"])){
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>
-    let periodePengukuran = '<?php echo $periode;?>';
-    if (periodePengukuran > 0) {
-        $('#dma').removeClass('d-none');
-        $('#dekompose').removeClass('d-none');
-    } else {
-        $('#form').removeClass('d-none');
-        $('#info').addClass('d-none');
-    }
 
-    function gantiPeriode() {
-        $('#dma').addClass('d-none');
-        $('#dekompose').addClass('d-none');
-        $('#form').removeClass('d-none');
-        $('#info').removeClass('d-flex');
-        $('#info').addClass('d-none');
-
-    }
-    </script>
 </body>
 
 </html>
