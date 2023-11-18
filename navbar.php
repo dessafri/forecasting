@@ -6,7 +6,7 @@
                 <a class="nav-link font-navbar" href="index.php">Home</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link font-navbar" href="peramalan.php">Data Peramalan</a>
+                <a class="nav-link font-navbar" href="peramalan.php">Data Produksi</a>
             </li>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle font-navbar" href="#" id="navbarDropdown" role="button"

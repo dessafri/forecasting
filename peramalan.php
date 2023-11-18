@@ -12,6 +12,7 @@ if(isset($_POST["submit_logout"])){
 }
 if(isset($_POST["submit_data"])){
   buatdata($_POST);
+  $_POST = array();
 }
 
 ?>
@@ -29,7 +30,7 @@ if(isset($_POST["submit_data"])){
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
         integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>Data Peramalan</title>
+    <title>Data Produksi</title>
 </head>
 
 <body>
@@ -43,7 +44,7 @@ if(isset($_POST["submit_data"])){
     <section class="content">
         <div class="container">
             <div style="display: flex; justify-content: space-between">
-                <h1 class="h1-brand">Data Peramalan</h1>
+                <h1 class="h1-brand">Data Produksi</h1>
                 <button class="btn btn-primary" data-toggle="modal" data-target="#modaldata">Tambah Data</button>
             </div>
             <div class="tabel">
@@ -53,7 +54,6 @@ if(isset($_POST["submit_data"])){
                             <th>No</th>
                             <th>TAHUN</th>
                             <th>BULAN</th>
-                            <th>PERIODE</th>
                             <th>PRODUKSI</th>
                             <th>AKSI</th>
                         </tr>
@@ -64,8 +64,7 @@ if(isset($_POST["submit_data"])){
                         id_mddata,
                           tahun,
                           bulan,
-                          produksi,
-                          periode
+                          produksi
                         FROM
                           m_data");
                         $index = 1;
@@ -78,7 +77,6 @@ if(isset($_POST["submit_data"])){
                             <td><?= $index++ ?></td>
                             <td><?= $dataPeramalan["tahun"]?></td>
                             <td><?= $monthName?></td>
-                            <td><?= $dataPeramalan["periode"]?></td>
                             <td><?= $dataPeramalan["produksi"]?></td>
                             <td>
                                 <button class="btn btn-primary btn-sm"
@@ -113,10 +111,6 @@ if(isset($_POST["submit_data"])){
                             <div class="form-group">
                                 <label for="bulan">Bulan Dalam Angka</label>
                                 <input type="text" required name="bulan" class="form-control" id="bulan" />
-                            </div>
-                            <div class="form-group">
-                                <label for="periode">Periode</label>
-                                <input type="text" required name="periode" class="form-control" id="periode" />
                             </div>
                             <div class="form-group">
                                 <label for="produksi">Produksi</label>
@@ -195,10 +189,6 @@ if(isset($_POST["submit_data"])){
                                 <input type="text" value="${res[0].bulan}" required name="bulan" class="form-control" id="editbulan" />
                             </div>
                             <div class="form-group">
-                                <label for="periode">Periode</label>
-                                <input type="text" value="${res[0].periode}" required name="periode" class="form-control" id="editperiode" />
-                            </div>
-                            <div class="form-group">
                                 <label for="produksi">Produksi</label>
                                 <input type="text" value="${res[0].produksi}" required name="produksi" class="form-control" id="editproduksi" />
                             </div>
@@ -225,13 +215,11 @@ if(isset($_POST["submit_data"])){
                 let id = $("#editid").val();
                 let tahun = $("#edittahun").val();
                 let bulan = $("#editbulan").val();
-                let periode = $("#editperiode").val();
                 let produksi = $("#editproduksi").val();
                 let formData = new FormData();
                 formData.append("id", id);
                 formData.append("tahun", tahun);
                 formData.append("bulan", bulan);
-                formData.append("periode", periode);
                 formData.append("produksi", produksi);
                 fetch('updatedata.php', {
                     method: 'POST',
@@ -260,38 +248,14 @@ if(isset($_POST["submit_data"])){
                 return res.json()
             }).then(res => {
                 alert("Data Berhasil di Hapus")
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
+                // window.location.reload();
+                location.reload();
             })
         }
     }
     $(document).ready(function() {
         var table = $("#example").DataTable({
             lengthChange: true,
-            buttons: [{
-                    extend: "excel",
-                    text: "Export Excel",
-                    className: "btn-success",
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "pdf",
-                    text: "Export PDF",
-                    className: "btn-danger"
-                },
-                {
-                    extend: "spacer",
-                    style: "bar",
-                },
-                {
-                    extend: "colvis",
-                    text: "SORTIR"
-                },
-            ],
         });
 
         table
@@ -343,7 +307,8 @@ if(isset($_POST["submit_data"])){
                 }
             }))
         })
-    });
+    })
+        
     </script>
 </body>
 

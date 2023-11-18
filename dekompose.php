@@ -30,16 +30,16 @@ hasilDekompose();
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.2/css/buttons.bootstrap4.min.css" />
     <style>
-    .swal2-popup {
-        font-size: 12px !important;
-        font-family: Georgia, serif;
-    }
+        .swal2-popup {
+            font-size: 12px !important;
+            font-family: Georgia, serif;
+        }
 
-    h2 {
-        margin-top: 30px;
-        margin-bottom: 30px;
-        font-size: 18px;
-    }
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
     </style>
     <title>Dekompose</title>
 </head>
@@ -55,7 +55,7 @@ hasilDekompose();
     <section class="content">
         <div class="container">
             <div style="display: flex; justify-content: space-between">
-                <h1 class="h1-brand" style="font-size:22px;">METODE DEKOMPOSE</h1>
+                <h1 class="h1-brand" style="font-size:22px;">METODE DEKOMPOSISI</h1>
             </div>
             <div class="metodeDekompose" id="dekompose" style="margin-bottom: 100px;">
                 <canvas id="myChartDekompose"></canvas>
@@ -80,7 +80,7 @@ hasilDekompose();
                     </thead>
                     <tbody>
                         <?php
-                        $dataDekompose = query("SELECT a.id_dekompose, b.id_mddata, b.tahun,c.nama_bulan,b.periode, b.produksi, a.ma, a.cma, a.x, a.x2, a.xy, a.st, a.tt, a.ct, a.ft, a.mape FROM td_dekompose a JOIN m_data b ON a.id_data = b.id_mddata JOIN m_bulan c ON b.bulan = c.id_bulan");
+                        $dataDekompose = query("SELECT a.id_dekompose, b.id_mddata, b.tahun,c.nama_bulan, b.produksi, a.ma, a.cma, a.x, a.x2, a.xy, a.st, a.tt, a.ct, a.ft, a.mape FROM td_dekompose a JOIN m_data b ON a.id_data = b.id_mddata JOIN m_bulan c ON b.bulan = c.id_bulan");
                         $index = 1;
                         foreach($dataDekompose as $data):
                         ?>
@@ -168,80 +168,103 @@ hasilDekompose();
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
+    </script>
 
 
     <script>
-    $(document).ready(function() {
-        const ctx2 = document.getElementById('myChartDekompose');
-        fetch('dataDekompose.php')
-            .then(res => res.json())
-            .then(response => {
-                console.log(response)
-                const prod = [];
-                const ft = [];
-                const bulan = [];
-                response.forEach(item => {
-                    prod.push(item.produksi);
-                    ft.push(item.ft);
-                    bulan.push(item.nama_bulan);
-                });
-                new Chart(ctx2, {
-                    type: 'line',
-                    data: {
-                        labels: bulan,
-                        datasets: [{
-                                label: 'Produksi',
-                                data: prod,
-                                borderColor: 'rgb(100, 10, 192)',
-                                backgroundColor: 'purple',
-                                yAxisID: 'y'
-                            },
-                            {
-                                label: 'FT',
-                                data: ft,
-                                borderColor: 'rgb(255, 150, 1)',
-                                backgroundColor: 'orange',
-                                yAxisID: 'y1'
-                            },
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: {
-                            // mode: 'index',
-                            intersect: false,
-                            axis: 'x'
+        $(document).ready(function () {
+            const ctx2 = document.getElementById('myChartDekompose');
+            fetch('dataDekompose.php')
+                .then(res => res.json())
+                .then(response => {
+                    const prod = [];
+                    const ft = [];
+                    const bulan = [];
+                    response.forEach(item => {
+                        prod.push(item.produksi);
+                        ft.push(item.ft);
+                        bulan.push(item.nama_bulan);
+                    });
+                    new Chart(ctx2, {
+                        type: 'line',
+                        data: {
+                            labels: bulan,
+                            datasets: [{
+                                    label: 'Produksi',
+                                    data: prod,
+                                    borderColor: 'rgb(100, 10, 192)',
+                                    backgroundColor: 'purple',
+                                    yAxisID: 'y',
+                                },
+                                {
+                                    label: 'FT',
+                                    data: ft,
+                                    borderColor: 'rgb(255, 150, 1)',
+                                    backgroundColor: 'orange',
+                                    yAxisID: 'y1',
+                                },
+                            ],
                         },
-                        // stacked: false,
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: 'Hasil Forecasting Metode DEKOMPOSISI'
-                            }
-                        },
-                        scales: {
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-
+                        options: {
+                            responsive: true,
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false,
                             },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
-
-
-                                // grid line settings
-                                grid: {
-                                    drawOnChartArea: false, // only want the grid lines for one axis to show up
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Hasil Forecasting Metode DEKOMPOSISI',
+                                    maxTextWidth: 200,
+                                },
+                                datalabels: {
+                                    display: true,
+                                    formatter: function (value, context) {
+                                        // Check if value is a number
+                                        if (typeof value === 'number') {
+                                            return value.toFixed(
+                                            2); // Format as a number with two decimal places
+                                        } else {
+                                            return value; // If it's not a number, return it as is
+                                        }
+                                    },
+                                    align: 'top',
+                                    anchor: 'end',
+                                    color: 'black',
                                 },
                             },
-                        }
-                    }
-                });
-            })
-    });
+                            scales: {
+                                x: {
+                                    ticks: {
+                                        autoSkip: false,
+                                        beginAtZero: true,
+                                    },
+                                },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    grid: {
+                                        drawOnChartArea: false,
+                                    },
+                                },
+                            },
+                        },
+                        // Aktifkan plugin datalabels di sini
+                        plugins: [ChartDataLabels],
+                    });
+
+
+
+                })
+        });
     </script>
 </body>
 

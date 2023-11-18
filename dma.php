@@ -34,16 +34,16 @@ if(isset($_POST["submit_logout"])){
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.2/css/buttons.bootstrap4.min.css" />
     <style>
-    .swal2-popup {
-        font-size: 12px !important;
-        font-family: Georgia, serif;
-    }
+        .swal2-popup {
+            font-size: 12px !important;
+            font-family: Georgia, serif;
+        }
 
-    h2 {
-        margin-top: 30px;
-        margin-bottom: 30px;
-        font-size: 18px;
-    }
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
     </style>
     <title>DOUBLE MOVING AVERAGE</title>
 </head>
@@ -65,12 +65,23 @@ if(isset($_POST["submit_logout"])){
             </div>
             <div class="form-input d-none" id="form">
                 <form method="post">
-                    <label for="exampleInputEmail1" class="text-center">Masukkan periode awal untuk di Hitung</label>
-                    <div class="form-group text-center d-block">
-                        <input type="text" name="periode" class="form-control text-center">
+                    <label for="exampleInputEmail1" class="text-center">Masukkan periode awal untuk di
+                        Hitung</label>
+                    <div class="row">
+                    <div class="select col-md-6">
+                        <div class="form-group text-center d-block">
+                            <select name="periode" class="form-control text-center">
+                                <option value="1">Pilih Periode</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="button text-center">
+                    <div class="button col-md-6">
                         <button type="submit" name="submitperiode" class="btn btn-primary">Submit</button>
+                    </div>
                     </div>
                 </form>
             </div>
@@ -86,18 +97,17 @@ if(isset($_POST["submit_logout"])){
                             <th>TAHUN</th>
                             <th>BULAN</th>
                             <th>PRODUKSI</th>
-                            <th>MA2(S')</th>
-                            <th>DMA2(S")</th>
-                            <th>a</th>
-                            <th>b</th>
+                            <th>S't</th>
+                            <th>S"t</th>
+                            <th>at</th>
+                            <th>bt</th>
                             <th>Ft</th>
-                            <th>Error (At-Ft)</th>
                             <th>MAPE</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $dataDMA = query("SELECT a.id_dma, b.id_mddata, b.tahun,b.bulan,b.periode, b.produksi, a.ma2, a.dma2, a.a, a.b, a.ft, a.error, a.mape FROM td_dma a JOIN m_data b ON a.id_data = b.id_mddata");
+                        $dataDMA = query("SELECT a.id_dma, b.id_mddata, b.tahun,b.bulan, b.produksi, a.ma2, a.dma2, a.a, a.b, a.ft, a.error, a.mape FROM td_dma a JOIN m_data b ON a.id_data = b.id_mddata");
                         $index = 1;
                         foreach($dataDMA as $data):
                         ?>
@@ -111,7 +121,6 @@ if(isset($_POST["submit_logout"])){
                             <td><?= $data["a"] ?></td>
                             <td><?= $data["b"]?></td>
                             <td><?= $data["ft"] ?></td>
-                            <td><?= $data["error"] ?></td>
                             <td><?= $data["mape"] ?></td>
                         </tr>
                         <?php endforeach; ?>
@@ -163,7 +172,6 @@ if(isset($_POST["submit_logout"])){
             </div>
         </div>
     </section>
-
     <script src="js/jquery.js"></script>
     <script src="js/bootstrap.js"></script>
     <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
@@ -177,99 +185,122 @@ if(isset($_POST["submit_logout"])){
     <script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.print.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.colVis.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js"
-        integrity="sha512-6PM0qYu5KExuNcKt5bURAoT6KCThUmHRewN3zUFNaoI6Di7XJPTMoT6K0nsagZKk2OB4L7E3q1uQKHNHd4stIQ=="
+        integrity="sha512-6PM0qYu5KExuNcKt5bURAoTPVyMExQN2bvLyzuBfqkTSSnYZKG3hkwUV0nsagZKk2OB4L7E3q1uQKHNHd4stIQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <script>
-    let periodePengukuran = '<?php echo $periode;?>';
-    console.log(periodePengukuran);
-    if (periodePengukuran > 0) {
-        $('#dma').removeClass('d-none');
-        $('#dekompose').removeClass('d-none');
-    } else {
-        $('#form').removeClass('d-none');
-        $('#info').addClass('d-none');
-    }
-
-    function gantiPeriode() {
-        $('#dma').addClass('d-none');
-        $('#dekompose').addClass('d-none');
-        $('#form').removeClass('d-none');
-        $('#info').removeClass('d-flex');
-        $('#info').addClass('d-none');
-
-    }
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
     </script>
     <script>
-    $(document).ready(function() {
-        const ctx = document.getElementById('myChart');
-        fetch('dataDMA.php')
-            .then(res => res.json())
-            .then(response => {
-                const prod = [];
-                const ft = [];
-                const bulan = [];
-                response.forEach(item => {
-                    prod.push(item.produksi);
-                    ft.push(item.ft);
-                    bulan.push(item.nama_bulan);
-                });
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: bulan,
-                        datasets: [{
-                                label: 'Produksi',
-                                data: prod,
-                                borderColor: 'rgb(75, 192, 192)',
-                                backgroundColor: 'cyan',
-                                yAxisID: 'y'
-                            },
-                            {
-                                label: 'FT',
-                                data: ft,
-                                borderColor: 'rgb(75, 150, 1)',
-                                backgroundColor: 'green',
-                                yAxisID: 'y1'
-                            },
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
-                        stacked: false,
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: 'Hasil Forecasting Metode DMA'
-                            }
-                        },
-                        scales: {
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-                            },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
+        let periodePengukuran = '<?php echo $periode;?>';
+        if (periodePengukuran > 0) {
+            $('#dma').removeClass('d-none');
+            $('#dekompose').removeClass('d-none');
+        } else {
+            $('#form').removeClass('d-none');
+            $('#info').addClass('d-none');
+        }
 
-                                // grid line settings
-                                grid: {
-                                    drawOnChartArea: false, // only want the grid lines for one axis to show up
+        function gantiPeriode() {
+            $('#dma').addClass('d-none');
+            $('#dekompose').addClass('d-none');
+            $('#form').removeClass('d-none');
+            $('#info').removeClass('d-flex');
+            $('#info').addClass('d-none');
+
+        }
+    </script>
+    <script>
+        $(document).ready(function () {
+            const ctx = document.getElementById('myChart');
+            fetch('dataDMA.php')
+                .then(res => res.json())
+                .then(response => {
+                    const prod = [];
+                    const ft = [];
+                    const bulan = [];
+                    response.forEach(item => {
+                        prod.push(item.produksi);
+                        ft.push(item.ft);
+                        bulan.push(item.nama_bulan);
+                    });
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: bulan,
+                            datasets: [{
+                                    label: 'Produksi',
+                                    data: prod,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    backgroundColor: 'cyan',
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'FT',
+                                    data: ft,
+                                    borderColor: 'rgb(75, 150, 1)',
+                                    backgroundColor: 'green',
+                                    yAxisID: 'y1'
+                                },
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false,
+                            },
+
+                            stacked: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Hasil Forecasting Metode DMA'
+                                },
+                                datalabels: {
+                                    display: true,
+                                    formatter: function (value, context) {
+                                        // Check if value is a number
+                                        if (typeof value === 'number') {
+                                            return value.toFixed(
+                                                2
+                                            ); // Format as a number with two decimal places
+                                        } else {
+                                            return value; // If it's not a number, return it as is
+                                        }
+                                    },
+                                    align: 'top',
+                                    anchor: 'end',
+                                    color: 'black',
                                 },
                             },
-                        }
-                    }
-                });
-            })
-    });
+                            scales: {
+                                x: {
+                                    ticks: {
+                                        autoSkip: false
+                                    }
+                                },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+
+                                    // grid line settings
+                                    grid: {
+                                        drawOnChartArea: false, // only want the grid lines for one axis to show up
+                                    },
+                                },
+                            }
+                        },
+                        plugins: [ChartDataLabels],
+                    });
+                })
+        });
     </script>
 </body>
 

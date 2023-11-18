@@ -192,7 +192,6 @@ function buatHasil($inputPeriode){
         $sqlFT = "UPDATE td_dma SET ft = '$val' WHERE id_data = '$id'";
          mysqli_query($conn, $sqlFT);
     }
-    //Perhitungan MAPE
     $dataErr = query('SELECT b.id_data, a.produksi, b.a, b.ft FROM m_data a JOIN td_dma b ON a.id_mddata = b.id_data');
     $ERR = array();
     foreach($dataErr as $index=> $data){
@@ -226,40 +225,27 @@ function hasilDekompose(){
     hapusdekompose();
     $dataforecast = query('SELECT id_mddata, produksi FROM m_data');
     // dekompose
-    $inputPeriode = 5;
+    $inputPeriode = 4;
     $arrayMADekompose = array();
     $batasBawahMaDekompose = 0;
-    $batasAtasMaDekompose = 12;
-    $totalStopdata = count($dataforecast) - $inputPeriode-1;
+    $batasAtasMaDekompose = $inputPeriode;
     foreach($dataforecast as $index=> $data){
         if($index < $inputPeriode){
             array_push($arrayMADekompose, array('id'=>$data['id_mddata'], 'value'=>0));
         }else{
-            if($index < $totalStopdata){
-                $total = [];
+            $total = [];
             $slice = array_slice($dataforecast, $batasBawahMaDekompose, $batasAtasMaDekompose);
-            // var_dump($slice);
-            for($i=$batasBawahMaDekompose; $i < $batasAtasMaDekompose; $i++){
+            for($i=0; $i < $inputPeriode; $i++){
             
-                array_push($total, $dataforecast[$i]['produksi']);
+                array_push($total, $slice[$i]['produksi']);
             }
-            
-            // var_dump($total);
-            if(count($total) == 12){
-                // $result = array_sum($total)/12;
-                $result = round(array_sum($total)/12,2);
-                $batasBawahMaDekompose += 1;
-                $batasAtasMaDekompose += 1;
-                array_push($arrayMADekompose, array('id'=>$data['id_mddata'], 'value'=>$result));
-            }
-            }else{
-                array_push($arrayMADekompose, array('id'=>$data['id_mddata'], 'value'=>0));
-            
-            }
-            
+            $result = round(array_sum($total)/$inputPeriode,2);
+            $batasBawahMaDekompose += 1;
+            $batasAtasMaDekompose += 1;
+            array_push($arrayMADekompose, array('id'=>$data['id_mddata'], 'value'=>$result));
         }
     }
-    $sqlInsertDekompose = "INSERT INTO td_dekompose (id_dekompose, id_data, simple) VALUES";
+    $sqlInsertDekompose = "INSERT INTO td_dekompose (id_dekompose, id_data, ma) VALUES";
     foreach($arrayMADekompose as $d){
         $sqlInsertDekompose .= "(NULL,'" .
         $d['id'] .
@@ -274,86 +260,30 @@ function hasilDekompose(){
         mysqli_query($conn, $sqlInsertDekompose);
     }
 
-    $arrayCentered = array();
-    $sqlSimpleDekompose = query('SELECT id_data, simple FROM td_dekompose');
-    foreach($sqlSimpleDekompose as $index=> $data){
+    $arrayCMADekompose = array();
+    $sqlMADekompose = query('SELECT id_data, ma FROM td_dekompose');
+    foreach($sqlMADekompose as $index=> $data){
+        $pow = pow($index,2);
         $xy = $dataforecast[$index]['produksi'] * $index;
         if($index < $inputPeriode+1){
-            array_push($arrayCentered, array('id'=>$data['id_data'], 'value'=>0));
+            array_push($arrayCMADekompose, array('id'=>$data['id_data'], 'value'=>0, 'x'=>$index, 'x2'=>$pow, 'xy'=>$xy));
         }else{
-            if($index < $totalStopdata){
-                $total = [];
-                array_push($total,$sqlSimpleDekompose[$index-1]['simple']);
-                array_push($total,$sqlSimpleDekompose[$index]['simple']);
-                $result = array_sum($total)/2;
-                array_push($arrayCentered, array('id'=>$data['id_data'], 'value'=>$result));
-            }else{
-                array_push($arrayCentered, array('id'=>$data['id_data'], 'value'=>0));
-            }
+        
+            $total = [];
+            array_push($total,$sqlMADekompose[$index-1]['ma']);
+            array_push($total,$sqlMADekompose[$index]['ma']);
+            $result = array_sum($total)/2;
+            array_push($arrayCMADekompose, array('id'=>$data['id_data'], 'value'=>$result, 'x'=>$index, 'x2'=>$pow, 'xy'=> $xy));
         }
     }
-    foreach($arrayCentered as $d){
+    foreach($arrayCMADekompose as $d){
         $id= $d['id'];
         $val = $d['value'];
-        $sqlCentered = "UPDATE td_dekompose SET centered = '$val' WHERE id_data = '$id'";
-        mysqli_query($conn, $sqlCentered);
-    }
-    $arrayDetrend = array();
-    $dataCentered = query("SELECT id_data,centered FROM td_dekompose");
-    foreach($dataCentered as $index=>$data){
-        if($index < $inputPeriode+1){
-            array_push($arrayDetrend, array('id'=>$data['id_data'], 'value'=>0));
-        }else{
-            if($index < $totalStopdata){
-                $result = $dataforecast[$index]['produksi'] - $dataCentered[$index]['centered'];
-                array_push($arrayDetrend, array('id'=>$data['id_data'], 'value'=>$result));
-            }else{
-                array_push($arrayDetrend, array('id'=>$data['id_data'], 'value'=>0));
-            }
-        }
-    }
-    foreach($arrayDetrend as $d){
-        $id= $d['id'];
-        $val = $d['value'];
-        $sqlDetrend = "UPDATE td_dekompose SET detrend = '$val' WHERE id_data = '$id'";
-        mysqli_query($conn, $sqlDetrend);
-    }
-    $dataUnadjusted = query("SELECT 
-    ROUND(AVG(td_dekompose.detrend)) AS average_detrend,
-    m_data.bulan AS bulan, id_data
-    FROM 
-    td_dekompose
-    JOIN 
-    m_data ON td_dekompose.id_data = m_data.id_mddata
-    WHERE 
-    td_dekompose.detrend <> 0
-    GROUP BY 
-    m_data.bulan
-    ORDER BY 
-    bulan ASC");
-    $total = [];
-    foreach($dataUnadjusted as $data){
-        array_push($total, $data['average_detrend']);
-    }
-    $average = round(array_sum($total) / count($total));
-    $index = 0;
-    foreach($dataforecast as $data){
-        $result = $total[$index] - $average;
-        if($index > 11){
-            $index = 0;
-        }else{
-            $index +=1;
-        }
-        $id = $data['id_mddata'];
-        $sqlSeasonal = "UPDATE td_dekompose SET seasonal = $result WHERE id_data = '$id'";
-        mysqli_query($conn, $sqlSeasonal);
-    }
-    $dataseasonal = query("SELECT id_data,seasonal FROM td_dekompose");
-    foreach($dataseasonal as $index=> $data){
-        $result = $dataforecast[$index]['produksi'] - $data['seasonal'];
-        $id = $data['id_data'];
-        $sqldeseasoal = "UPDATE td_dekompose SET deseasonal = $result WHERE id_data = '$id'";
-        mysqli_query($conn, $sqldeseasoal);
+        $x = $d['x'];
+        $x2 = $d['x2'];
+        $xy = $d['xy'];
+        $sqlCMA = "UPDATE td_dekompose SET cma = '$val', x = '$x', x2 = '$x2', xy = '$xy' WHERE id_data = '$id'";
+        mysqli_query($conn, $sqlCMA);
     }
     $dataNilai = query('SELECT COUNT(b.id_mddata) AS banyak_data, SUM(b.produksi) as produksi, SUM(a.x) as X, SUM(a.x2) AS X2, SUM(a.xy) AS XY FROM td_dekompose a JOIN m_data b ON b.id_mddata = a.id_data');
     $pangkat = pow($dataNilai[0]['X'],2);
@@ -443,7 +373,6 @@ function hasilDekompose(){
         $sqlFT = "UPDATE td_dekompose SET ft = '$val' WHERE id_data = '$id'";
         mysqli_query($conn, $sqlFT);
     }
-    //Perhitungan MAPE
     $dataErr = query('SELECT b.id_data, a.produksi, b.ft FROM m_data a JOIN td_dekompose b ON a.id_mddata = b.id_data');
     $ERR = array();
     foreach($dataErr as $index=> $data){
