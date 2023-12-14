@@ -10,9 +10,7 @@ if ($_SESSION['id'] != '1') {
 if(isset($_POST["submit_logout"])){
   logout($_POST);
 }
-if(isset($_POST["submit_kriteria"])){
-  buatKriteria($_POST);
-}
+
 hasilDekompose();
 ?>
 <!DOCTYPE html>
@@ -66,21 +64,22 @@ hasilDekompose();
                             <th>TAHUN</th>
                             <th>BULAN</th>
                             <th>PRODUKSI</th>
-                            <th>MA</th>
-                            <th>CMA</th>
-                            <th>X</th>
-                            <th>X2</th>
-                            <th>XY</th>
-                            <th>ST</th>
-                            <th>TT</th>
-                            <th>CT</th>
-                            <th>FT</th>
-                            <th>MAPE</th>
+                            <th>SIMPLE</th>
+                            <th>CENTERED</th>
+                            <th>DETREND</th>
+                            <th>DESEASONAL</th>
+                            <th>DESEASONAL PRODUCTION</th>
+                            <th>TREND</th>
+                            <th>FORECAST</th>
+                            <th>ERROR</th>
+                            <th>|ERROR|</th>
+                            <th>ERROR2</th>
+                            <th>ERROR/AT</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $dataDekompose = query("SELECT a.id_dekompose, b.id_mddata, b.tahun,c.nama_bulan, b.produksi, a.ma, a.cma, a.x, a.x2, a.xy, a.st, a.tt, a.ct, a.ft, a.mape FROM td_dekompose a JOIN m_data b ON a.id_data = b.id_mddata JOIN m_bulan c ON b.bulan = c.id_bulan");
+                        $dataDekompose = query("SELECT a.id_dekompose, b.id_mddata, b.tahun,c.nama_bulan, b.produksi, a.simple, a.centered, a.detrend, a.seasonal, a.deseasonal, a.trend, a.forecast, a.error, a.error1, a.error2, a.errorat FROM td_dekompose a JOIN m_data b ON a.id_data = b.id_mddata JOIN m_bulan c ON b.bulan = c.id_bulan");
                         $index = 1;
                         foreach($dataDekompose as $data):
                         ?>
@@ -89,24 +88,25 @@ hasilDekompose();
                             <td><?= $data["tahun"]?></td>
                             <td><?= $data["nama_bulan"] ?></td>
                             <td><?= $data["produksi"] ?></td>
-                            <td><?= $data["ma"]?></td>
-                            <td><?= $data["cma"] ?></td>
-                            <td><?= $data["x"] ?></td>
-                            <td><?= $data["x2"]?></td>
-                            <td><?= $data["xy"] ?></td>
-                            <td><?= $data["st"] ?></td>
-                            <td><?= $data["tt"] ?></td>
-                            <td><?= $data["ct"] ?></td>
-                            <td><?= $data["ft"] ?></td>
-                            <td><?= $data["mape"] ?></td>
+                            <td><?= $data["simple"]?></td>
+                            <td><?= $data["centered"] ?></td>
+                            <td><?= $data["detrend"] ?></td>
+                            <td><?= $data["seasonal"]?></td>
+                            <td><?= $data["deseasonal"] ?></td>
+                            <td><?= $data["trend"] ?></td>
+                            <td><?= $data["forecast"] ?></td>
+                            <td><?= $data["error"] ?></td>
+                            <td><?= $data["error1"] ?></td>
+                            <td><?= $data["error2"] ?></td>
+                            <td><?= $data["errorat"] ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
                 <div class="totalMape mt-4">
                     <?php
-                        $dataMape = query("SELECT COUNT(mape) AS banyak_mape, SUM(mape) as total_mape FROM td_dekompose WHERE mape > 0");
-                        $mapetotal = round($dataMape[0]['total_mape']/$dataMape[0]['banyak_mape'],2);
+                        $dataMape = query("SELECT AVG(errorat) AS mape FROM td_dekompose");
+                        $mapetotal = round($dataMape[0]['mape'],5);
                         ?>
                     <div class="row">
                         <div class="col-5 offset-7 d-flex justify-content-end">
