@@ -1,4 +1,4 @@
-<?php $conn = mysqli_connect('localhost', 'root', '', 'forecasting2');
+<?php $conn = mysqli_connect('localhost', 'root', '', 'forecasting');
 error_reporting(E_ERROR);
 if (!$conn) {
     mysqli_error($koneksi);
