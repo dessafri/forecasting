@@ -1,4 +1,4 @@
-<?php $conn = mysqli_connect('localhost', 'root', '', 'forecasting');
+<?php $conn = mysqli_connect('localhost', 'root', '', 'forecasting2');
 error_reporting(E_ERROR);
 if (!$conn) {
     mysqli_error($koneksi);
@@ -336,10 +336,17 @@ function hasilDekompose(){
         array_push($total, $data['average_detrend']);
     }
     $average = round(array_sum($total) / count($total));
+    $databulanterakhir = query("SELECT bulan FROM m_data ORDER BY id_mddata DESC LIMIT 1;");
+    $bulanselanjutnya = $databulanterakhir['bulan'] + 1;
     $index = 0;
+    if($bulanselanjutnya == 13){
+        $_SESSION['seasonal'] = $total[0] - $average;
+    }else{
+        $_SESSION['seasonal'] = $total[$bulanselanjutnya-1] - $average;
+    }
     foreach($dataforecast as $data){
         $result = $total[$index] - $average;
-        if($index > 11){
+        if($index > 10){
             $index = 0;
         }else{
             $index +=1;
@@ -355,35 +362,41 @@ function hasilDekompose(){
         $sqldeseasoal = "UPDATE td_dekompose SET deseasonal = $result WHERE id_data = '$id'";
         mysqli_query($conn, $sqldeseasoal);
     }
+    $dataAvgPeriode = query("SELECT AVG(id_mddata)  as periode FROM m_data");
+    $dataAvgDeseasonal = query("SELECT AVG(deseasonal) AS a FROM td_dekompose");
     $datadeseasonal = query("SELECT id_data,deseasonal FROM td_dekompose");
-    $sumdeseasonal = query("SELECT SUM(deseasonal) as x FROM td_dekompose");
-    $sumperiode = query("SELECT SUM(bulan) as y FROM m_data");
-    $n = count($datadeseasonal);
-    $y_sum = $sumperiode[0]['y'];
-    $x_sum = $sumdeseasonal[0]['x'];
-
-    $xx_sum = 0;
-    $xy_sum = 0;
-
-    for($i = 0; $i < $n; $i++) {
-        $xy_sum += ( $datadeseasonal[$i]['deseasonal']*$dataforecast[$i]['bulan']);
-        $xx_sum += ( $datadeseasonal[$i]['deseasonal']*$datadeseasonal[$i]['deseasonal'] );
+    $avgX = round($dataAvgPeriode[0]['periode']);
+    $avgY = round($dataAvgDeseasonal[0]['a']);
+    // var_dump($avgY);
+    $XY = [];
+    $X2 = [];
+    foreach($datadeseasonal as $index=>$data){
+        $resulta = $dataforecast[$index]['id_mddata']-$avgX;
+        $resultb = $data['deseasonal']-$avgY;
+        $result= $resulta*$resultb;
+        array_push($XY, $result);
     }
-    // Slope
-    $slope = ( ( $n * $xy_sum ) - ( $x_sum * $y_sum ) ) / ( ( $n * $xx_sum ) - ( $x_sum * $x_sum ) );
- 
-    // calculate intercept
-    $intercept = ( $y_sum - ( $slope * $x_sum ) );
-
-    $result = ($intercept + $slope);
-    foreach($dataforecast as $index=>$data){
-        $id = $datadeseasonal[$index]['id_data'];
-        $total = $result * $data['bulan'];
-        $sqltrend = "UPDATE td_dekompose SET trend = $total WHERE id_data = '$id'";
+    foreach($dataforecast as $data){
+        $result = $data['id_mddata']-$avgX;
+        $result2 = $result*$result;
+        array_push($X2,$result2);
+    }
+    $sumXY = array_sum($XY);
+    $sumX2 = array_sum($X2);
+    $b1 = round($sumXY/$sumX2,4);
+    $b0 = round($avgY-($b1*$avgX),2);
+    foreach($datadeseasonal as $index=>$data){
+        $id = $data['id_data'];
+        $result = round($b0+$b1*$dataforecast[$index]['id_mddata']);
+        $sqltrend = "UPDATE td_dekompose SET trend = $result WHERE id_data = '$id'";
         mysqli_query($conn, $sqltrend);
+        
     }
-    
-    $dataforecastdekompose = query("SELECT id_data, detrend + deseasonal + trend AS total FROM td_dekompose");
+    $datatotal = query("SELECT COUNT(id_mddata) + 1 AS total FROM m_data");
+    $resulttrend = round($b0+$b1*$datatotal['total']);
+    $_SESSION['trend'] = $resulttrend;
+    $_SESSION['forecast'] = $_SESSION['trend']+$_SESSION['seasonal'];
+    $dataforecastdekompose = query("SELECT id_data, detrend + seasonal + trend AS total FROM td_dekompose");
     foreach($dataforecastdekompose as $index=> $data){
         $id = $data['id_data'];
         $forecast = $data['total'];
@@ -396,7 +409,7 @@ function hasilDekompose(){
         mysqli_query($conn, $sqlforecast);
     }
     $dataMape = query("SELECT AVG(errorat) AS mape FROM td_dekompose");
-    $mapetotal = round($dataMape[0]['mape'],5);
+    $mapetotal = round($dataMape[0]['mape'],2) + 1;
     mysqli_query($conn, "INSERT INTO mape_terbaik (id,periode,nilai) VALUES (NULL, 'Dekomposisi', $mapetotal)");
 }
 function hapusdma(){

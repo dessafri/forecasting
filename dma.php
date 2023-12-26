@@ -61,27 +61,27 @@ if(isset($_POST["submit_logout"])){
             <div class="d-flex justify-content-between" id="info">
                 <p style="font-size: 16px;">Periode Pengukuran : <span class="font-weight-bold"><?=$periode?> Periode
                     </span></p>
-                <button class="btn btn-primary" onclick="gantiPeriode()">Ganti Periode Pengukuran</button>
+                <button class="btn btn-primary" id="btngantiperiode">Ganti Periode Pengukuran</button>
             </div>
             <div class="form-input d-none" id="form">
                 <form method="post">
                     <label for="exampleInputEmail1" class="text-center">Masukkan periode awal untuk di
                         Hitung</label>
                     <div class="row">
-                    <div class="select col-md-6">
-                        <div class="form-group text-center d-block">
-                            <select name="periode" class="form-control text-center">
-                                <option value="1">Pilih Periode</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select>
+                        <div class="select col-md-6">
+                            <div class="form-group text-center d-block">
+                                <select name="periode" class="form-control text-center">
+                                    <option value="1">Pilih Periode</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    <div class="button col-md-6">
-                        <button type="submit" name="submitperiode" class="btn btn-primary">Submit</button>
-                    </div>
+                        <div class="button col-md-6">
+                            <button type="submit" name="submitperiode" class="btn btn-primary">Submit</button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -129,7 +129,8 @@ if(isset($_POST["submit_logout"])){
                 <div class="totalMape mt-4">
                     <?php
                         $dataMape = query("SELECT COUNT(mape) AS banyak_mape, SUM(mape) as total_mape FROM td_dma WHERE mape > 0");
-                        $mapetotal = round($dataMape[0]['total_mape']/$dataMape[0]['banyak_mape'],2);
+                        $totalmape = $dataMape[0]['total_mape']/$dataMape[0]['banyak_mape'];
+                        $mapetotal = round($totalmape,2);
                         ?>
                     <div class="row">
                         <div class="col-4 offset-8">
@@ -192,26 +193,22 @@ if(isset($_POST["submit_logout"])){
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
     </script>
     <script>
-        let periodePengukuran = '<?php echo $periode;?>';
-        if (periodePengukuran > 0) {
-            $('#dma').removeClass('d-none');
-            $('#dekompose').removeClass('d-none');
-        } else {
-            $('#form').removeClass('d-none');
-            $('#info').addClass('d-none');
-        }
-
-        function gantiPeriode() {
+        $("#btngantiperiode").on("click", function () {
             $('#dma').addClass('d-none');
             $('#dekompose').addClass('d-none');
             $('#form').removeClass('d-none');
             $('#info').removeClass('d-flex');
             $('#info').addClass('d-none');
-
-        }
-    </script>
-    <script>
+        })
         $(document).ready(function () {
+            let periodePengukuran = '<?php echo $periode;?>';
+            if (periodePengukuran > 0) {
+                $('#dma').removeClass('d-none');
+                $('#dekompose').removeClass('d-none');
+            } else {
+                $('#form').removeClass('d-none');
+                $('#info').addClass('d-none');
+            }
             const ctx = document.getElementById('myChart');
             fetch('dataDMA.php')
                 .then(res => res.json())

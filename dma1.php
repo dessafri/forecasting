@@ -7,11 +7,17 @@ if ($_SESSION['id'] != '1') {
     exit();
 }
 
+$periode = $_SESSION["periode"];
+
+if(isset($_POST["submitperiode"])){
+    $periode = $_POST["periode"];
+    $_SESSION["periode"] = $periode;
+    buatHasil($periode);
+}
+
 if(isset($_POST["submit_logout"])){
   logout($_POST);
 }
-
-hasilDekompose();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,7 +45,7 @@ hasilDekompose();
             font-size: 18px;
         }
     </style>
-    <title>Dekompose</title>
+    <title>DOUBLE MOVING AVERAGE</title>
 </head>
 
 <body>
@@ -52,67 +58,83 @@ hasilDekompose();
     </section>
     <section class="content">
         <div class="container">
-            <div style="display: flex; justify-content: space-between">
-                <h1 class="h1-brand" style="font-size:22px;">METODE DEKOMPOSISI</h1>
+            <div class="d-flex justify-content-between" id="info">
+                <p style="font-size: 16px;">Periode Pengukuran : <span class="font-weight-bold"><?=$periode?> Periode
+                    </span></p>
+                <button class="btn btn-primary" onclick="gantiPeriode()">Ganti Periode Pengukuran</button>
             </div>
-            <div class="metodeDekompose" id="dekompose" style="margin-bottom: 100px;">
-                <canvas id="myChartDekompose"></canvas>
-                <table id="tabel5" class="table table-striped table-bordered" style="width: 100%">
+            <div class="form-input d-none" id="form">
+                <form method="post">
+                    <label for="exampleInputEmail1" class="text-center">Masukkan periode awal untuk di
+                        Hitung</label>
+                    <div class="row">
+                        <div class="select col-md-6">
+                            <div class="form-group text-center d-block">
+                                <select name="periode" class="form-control text-center">
+                                    <option value="1">Pilih Periode</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="button col-md-6">
+                            <button type="submit" name="submitperiode" class="btn btn-primary">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="metodeDMA d-none" id="dma" style="margin-bottom: 100px;">
+                <div class="mb-4" style="display: flex; justify-content: space-between">
+                    <h1 class="h1-brand" style="font-size:22px;">METODE DOUBLE MOVING AVERAGE</h1>
+                </div>
+                <canvas id="myChart"></canvas>
+                <table id="tabel4" class="table table-striped table-bordered" style="width: 100%">
                     <thead class="table-data">
                         <tr>
                             <th>No</th>
                             <th>TAHUN</th>
                             <th>BULAN</th>
                             <th>PRODUKSI</th>
-                            <th>SIMPLE</th>
-                            <th>CENTERED</th>
-                            <th>DETREND</th>
-                            <th>SEASONAL</th>
-                            <th>DESEASONAL PRODUCTION</th>
-                            <th>TREND</th>
-                            <th>FORECAST</th>
-                            <th>ERROR</th>
-                            <th>|ERROR|</th>
-                            <th>ERROR2</th>
-                            <th>ERROR/AT</th>
+                            <th>S't</th>
+                            <th>S"t</th>
+                            <th>at</th>
+                            <th>bt</th>
+                            <th>Ft</th>
+                            <th>MAPE</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $dataDekompose = query("SELECT a.id_dekompose, b.id_mddata, b.tahun,c.nama_bulan, b.produksi, a.simple, a.centered, a.detrend, a.seasonal, a.deseasonal, a.trend, a.forecast, a.error, a.error1, a.error2, a.errorat FROM td_dekompose a JOIN m_data b ON a.id_data = b.id_mddata JOIN m_bulan c ON b.bulan = c.id_bulan");
+                        $dataDMA = query("SELECT a.id_dma, b.id_mddata, b.tahun,b.bulan, b.produksi, a.ma2, a.dma2, a.a, a.b, a.ft, a.error, a.mape FROM td_dma a JOIN m_data b ON a.id_data = b.id_mddata");
                         $index = 1;
-                        foreach($dataDekompose as $data):
+                        foreach($dataDMA as $data):
                         ?>
                         <tr>
                             <td><?= $index++?></td>
                             <td><?= $data["tahun"]?></td>
-                            <td><?= $data["nama_bulan"] ?></td>
+                            <td><?= $data["bulan"] ?></td>
                             <td><?= $data["produksi"] ?></td>
-                            <td><?= $data["simple"]?></td>
-                            <td><?= $data["centered"] ?></td>
-                            <td><?= $data["detrend"] ?></td>
-                            <td><?= $data["seasonal"]?></td>
-                            <td><?= $data["deseasonal"] ?></td>
-                            <td><?= $data["trend"] ?></td>
-                            <td><?= $data["forecast"] ?></td>
-                            <td><?= $data["error"] ?></td>
-                            <td><?= $data["error1"] ?></td>
-                            <td><?= $data["error2"] ?></td>
-                            <td><?= $data["errorat"] ?></td>
+                            <td><?= $data["ma2"]?></td>
+                            <td><?= $data["dma2"] ?></td>
+                            <td><?= $data["a"] ?></td>
+                            <td><?= $data["b"]?></td>
+                            <td><?= $data["ft"] ?></td>
+                            <td><?= $data["mape"] ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
                 <div class="totalMape mt-4">
                     <?php
-                        $dataMape = query("SELECT AVG(errorat) AS mape FROM td_dekompose");
-                        $mapetotal = round($dataMape[0]['mape'],2) + 1
+                        $dataMape = query("SELECT COUNT(mape) AS banyak_mape, SUM(mape) as total_mape FROM td_dma WHERE mape > 0");
+                        $mapetotal = round($dataMape[0]['total_mape']/$dataMape[0]['banyak_mape'],2);
                         ?>
                     <div class="row">
-                        <div class="col-5 offset-7 d-flex justify-content-end">
-                            <p class="text-end">MAPE (Mean Absolute Percentage Error) : <span
-                                    class=" font-weight-bold"><?= $mapetotal?>
-                                    %</span></p>
+                        <div class="col-4 offset-8">
+                            <p>MAPE (Mean Absolute Percentage Error) : <span
+                                    class="d-inline-block font-weight-bold"><?= $mapetotal?> %</span></p>
                         </div>
                     </div>
                     <div class="row">
@@ -122,9 +144,7 @@ hasilDekompose();
                                 <tr>
                                     <td>Tahun Berikutnya</td>
                                     <td>Bulan</td>
-                                    <th>SEASONAL</th>
-                                    <th>TREND</th>
-                                    <th>FORECAST</th>
+                                    <td>Ft</td>
                                 </tr>
                             </thead>
                             <tbody>
@@ -137,14 +157,13 @@ hasilDekompose();
                                         if($bulan == 12){
                                             $tahun += $dataPrediksi[0]['tahun'] + 1;
                                         }else{
-                                            $tahun += $dataPrediksi[0]['tahun'];
+                                        $tahun += $dataPrediksi[0]['tahun'];
                                         }
+                                        $ft = ($dataPrediksi[0]['a']*1) + ($dataPrediksi[0]['b']*1);
                                         ?>
                                     <td><?= $tahun ?></td>
                                     <td><?= $monthName ?></td>
-                                    <td><?= $_SESSION['seasonal']?></td>
-                                    <td><?= $_SESSION['trend']?></td>
-                                    <td><?= $_SESSION['forecast']?></td>
+                                    <td><?= $ft?></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -153,7 +172,6 @@ hasilDekompose();
             </div>
         </div>
     </section>
-
     <script src="js/jquery.js"></script>
     <script src="js/bootstrap.js"></script>
     <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
@@ -167,18 +185,33 @@ hasilDekompose();
     <script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.print.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.colVis.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js"
-        integrity="sha512-6PM0qYu5KExuNcKt5bURAoT6KCThUmHRewN3zUFNaoI6Di7XJPTMoT6K0nsagZKk2OB4L7E3q1uQKHNHd4stIQ=="
+        integrity="sha512-6PM0qYu5KExuNcKt5bURAoTPVyMExQN2bvLyzuBfqkTSSnYZKG3hkwUV0nsagZKk2OB4L7E3q1uQKHNHd4stIQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
     </script>
-
-
     <script>
         $(document).ready(function () {
-            const ctx2 = document.getElementById('myChartDekompose');
-            fetch('dataDekompose.php')
+            let periodePengukuran = '<?php echo $periode;?>';
+            if (periodePengukuran > 0) {
+                $('#dma').removeClass('d-none');
+                $('#dekompose').removeClass('d-none');
+            } else {
+                $('#form').removeClass('d-none');
+                $('#info').addClass('d-none');
+            }
+
+            function gantiPeriode() {
+                $('#dma').addClass('d-none');
+                $('#dekompose').addClass('d-none');
+                $('#form').removeClass('d-none');
+                $('#info').removeClass('d-flex');
+                $('#info').addClass('d-none');
+
+            }
+            const ctx = document.getElementById('myChart');
+            fetch('dataDMA.php')
                 .then(res => res.json())
                 .then(response => {
                     const prod = [];
@@ -189,38 +222,38 @@ hasilDekompose();
                         ft.push(item.ft);
                         bulan.push(item.nama_bulan);
                     });
-                    new Chart(ctx2, {
+                    new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: bulan,
                             datasets: [{
                                     label: 'Produksi',
                                     data: prod,
-                                    borderColor: 'rgb(100, 10, 192)',
-                                    backgroundColor: 'purple',
-                                    yAxisID: 'y',
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    backgroundColor: 'cyan',
+                                    yAxisID: 'y'
                                 },
                                 {
                                     label: 'FT',
                                     data: ft,
-                                    borderColor: 'rgb(255, 150, 1)',
-                                    backgroundColor: 'orange',
-                                    yAxisID: 'y1',
+                                    borderColor: 'rgb(75, 150, 1)',
+                                    backgroundColor: 'green',
+                                    yAxisID: 'y1'
                                 },
-                            ],
+                            ]
                         },
                         options: {
                             responsive: true,
                             interaction: {
-                                mode: 'nearest',
-                                axis: 'x',
+                                mode: 'index',
                                 intersect: false,
                             },
+
+                            stacked: false,
                             plugins: {
                                 title: {
                                     display: true,
-                                    text: 'Hasil Forecasting Metode DEKOMPOSISI',
-                                    maxTextWidth: 200,
+                                    text: 'Hasil Forecasting Metode DMA'
                                 },
                                 datalabels: {
                                     display: true,
@@ -228,7 +261,8 @@ hasilDekompose();
                                         // Check if value is a number
                                         if (typeof value === 'number') {
                                             return value.toFixed(
-                                            2); // Format as a number with two decimal places
+                                                2
+                                            ); // Format as a number with two decimal places
                                         } else {
                                             return value; // If it's not a number, return it as is
                                         }
@@ -241,9 +275,8 @@ hasilDekompose();
                             scales: {
                                 x: {
                                     ticks: {
-                                        autoSkip: false,
-                                        beginAtZero: true,
-                                    },
+                                        autoSkip: false
+                                    }
                                 },
                                 y: {
                                     type: 'linear',
@@ -254,18 +287,16 @@ hasilDekompose();
                                     type: 'linear',
                                     display: true,
                                     position: 'right',
+
+                                    // grid line settings
                                     grid: {
-                                        drawOnChartArea: false,
+                                        drawOnChartArea: false, // only want the grid lines for one axis to show up
                                     },
                                 },
-                            },
+                            }
                         },
-                        // Aktifkan plugin datalabels di sini
                         plugins: [ChartDataLabels],
                     });
-
-
-
                 })
         });
     </script>
